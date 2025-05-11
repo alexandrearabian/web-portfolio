@@ -11,7 +11,7 @@ import {
   CardFooter,
   CardHeader,
 } from "~/components/ui/card";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Repo } from "./actions/getRepos";
 
 export default function HomePage({ repos }: { repos: Repo[] }) {

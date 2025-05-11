@@ -1,10 +1,15 @@
 // app/actions/getRepos.ts (or in pages/api)
-export async function getRepos() {
+export async function getRepos(): Promise<Repo[]> {
   const res = await fetch(
     "https://api.github.com/users/alexandrearabian/repos",
   );
-  const data = await res.json();
-  return data;
+  if (!res.ok) return [];
+
+  const data: unknown = await res.json();
+
+  if (!Array.isArray(data)) return [];
+
+  return data as Repo[];
 }
 
 // types/repo.ts
