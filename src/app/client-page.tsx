@@ -15,7 +15,7 @@ import { useState } from "react";
 import type { Repo } from "./actions/getRepos";
 
 export default function HomePage({ repos }: { repos: Repo[] }) {
-  const [focusWink, setFocusWink] = useState(false);
+  const [focusThumbs, setFocusThumbs] = useState(false);
   const [focusAmazed, setFocusAmazed] = useState(false);
 
   return (
@@ -26,8 +26,13 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
       {/* Hero Section */}
       <section className="relative container mx-auto px-4 py-24">
         <div className="bg-background/70 m-auto flex w-35 justify-center rounded-full border border-purple-600">
-          {focusWink && (
-            <Image src="/wink.png" alt="Background" width={140} height={140} />
+          {focusThumbs && (
+            <Image
+              src="/thumbsup.png"
+              alt="Background"
+              width={140}
+              height={140}
+            />
           )}
           {focusAmazed && (
             <Image
@@ -37,7 +42,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
               height={140}
             />
           )}
-          {!focusWink && !focusAmazed && (
+          {!focusThumbs && !focusAmazed && (
             <Image src="/smile.png" alt="Background" width={140} height={140} />
           )}
         </div>
@@ -58,10 +63,10 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             <Link
               href="#contact"
               className="rounded-full bg-purple-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-purple-500"
-              onMouseEnter={() => setFocusWink(true)}
-              onMouseLeave={() => setFocusWink(false)}
-              onFocus={() => setFocusWink(true)} // keyboard accessibility
-              onBlur={() => setFocusWink(false)}
+              onMouseEnter={() => setFocusThumbs(true)}
+              onMouseLeave={() => setFocusThumbs(false)}
+              onFocus={() => setFocusThumbs(true)} // keyboard accessibility
+              onBlur={() => setFocusThumbs(false)}
             >
               Contact Me
             </Link>
