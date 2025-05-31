@@ -107,14 +107,14 @@ export function Navbar() {
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <NavigationMenu className="container flex h-16 items-center px-8 md:h-20">
-          <NavigationMenuList className="md:gap-12 lg:gap-16">
+          <NavigationMenuList className="gap-4 sm:gap-8 md:gap-12 lg:gap-16">
             {navItems.map((item) => (
               <NavigationMenuItem key={item.href}>
                 <a
                   href={item.href}
                   className={cn(
                     navigationMenuTriggerStyle(),
-                    "bg-transparent px-4 py-2 text-base font-medium transition-colors hover:bg-transparent hover:text-purple-500 focus:bg-transparent data-[active=true]:bg-transparent sm:px-6",
+                    "font-space bg-transparent px-4 py-2 text-base font-medium transition-colors hover:bg-transparent hover:text-purple-500 focus:bg-transparent data-[active=true]:bg-transparent sm:px-6",
                   )}
                   onClick={handleClick}
                 >

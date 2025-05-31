@@ -10,6 +10,7 @@ export const translations = {
       description:
         "A passionate software engineer and web developer crafting beautiful, functional, and user-friendly digital experiences.",
       contactButton: "Contact Me",
+      downloadCvButton: "Download CV",
       viewWorkButton: "View My Work",
     },
     about: {
@@ -47,7 +48,7 @@ export const translations = {
   },
   es: {
     nav: {
-      about: "Acerca de",
+      about: "Acerca",
       projects: "Proyectos",
       contact: "Contacto",
     },
@@ -56,6 +57,7 @@ export const translations = {
       description:
         "Un ingeniero de software apasionado y desarrollador web que crea experiencias digitales hermosas, funcionales y fáciles de usar.",
       contactButton: "Contáctame",
+      downloadCvButton: "Descargar CV",
       viewWorkButton: "Ver Mi Trabajo",
     },
     about: {
@@ -105,6 +107,7 @@ type TranslationStructure = {
     greeting: string;
     description: string;
     contactButton: string;
+    downloadCvButton: string;
     viewWorkButton: string;
   };
   about: {

@@ -32,7 +32,7 @@ export function Footer() {
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <Link
-                href="mailto:a.arabian.j@example.com"
+                href="mailto:a.arabian.j@gmail.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground/70 transition-colors duration-200 hover:text-purple-600"
@@ -48,7 +48,7 @@ export function Footer() {
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <Link
-                href="https://github.com/alxarabian"
+                href="https://github.com/alexandrearabian"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground/70 transition-colors duration-200 hover:text-purple-600"
@@ -64,7 +64,7 @@ export function Footer() {
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <Link
-                href="https://linkedin.com/in/alxarabian"
+                href="https://www.linkedin.com/in/alexandre-arabian-jensezian/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground/70 transition-colors duration-200 hover:text-purple-600"
@@ -73,7 +73,7 @@ export function Footer() {
                 <Linkedin className="h-5 w-5 sm:h-6 sm:w-6" />
               </Link>
             </motion.div>
-
+            {/*
             <motion.div
               whileHover={{ scale: 1.2, y: -5 }}
               whileTap={{ scale: 0.9 }}
@@ -88,12 +88,12 @@ export function Footer() {
               >
                 <Twitter className="h-5 w-5 sm:h-6 sm:w-6" />
               </Link>
-            </motion.div>
+            </motion.div> */}
           </div>
 
           {/* Copyright */}
           <motion.p
-            className="text-muted-foreground text-xs sm:text-sm"
+            className="text-muted-foreground font-inter text-xs sm:text-sm"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}

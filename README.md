@@ -4,5 +4,5 @@
 - [x] upload image
 - [x] create sections
 - [x] add profiles (git, fiverr, linkedin, twitter)
-- [ ] links to each website
-- [ ] visual cv
+- [x] links to each website
+- [x] visual cv
