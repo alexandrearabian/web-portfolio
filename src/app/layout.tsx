@@ -1,9 +1,11 @@
 import "~/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageProvider } from "~/contexts/LanguageContext";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google"; // ✅ Add monospace font
 import { Navbar } from "~/components/navbar";
+import { Footer } from "~/components/footer";
 
 export const metadata: Metadata = {
   title: "Alexandre Arabian",
@@ -31,16 +33,19 @@ export default function RootLayout({
       className={`${geist.variable} ${jetbrains.variable}`}
       suppressHydrationWarning
     >
-      <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Navbar />
-          {children}
-        </ThemeProvider>
+      <body className="overflow-x-hidden">
+        <LanguageProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
+            {children}
+            <Footer />
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Languages } from "lucide-react";
 import { motion } from "motion/react";
+import { useLanguage } from "~/contexts/LanguageContext";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,8 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function ModeToggle() {
-  const { setTheme } = useTheme();
+export function LanguageToggle() {
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <DropdownMenu>
@@ -25,21 +25,27 @@ export function ModeToggle() {
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
           <Button variant="outline" size="icon">
-            <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-            <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-            <span className="sr-only">Toggle theme</span>
+            <Languages className="h-[1.2rem] w-[1.2rem] transition-all" />
+            <span className="sr-only">{t.language.toggle}</span>
           </Button>
         </motion.div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
+        <DropdownMenuItem
+          onClick={() => setLanguage("en")}
+          className={
+            language === "en" ? "bg-purple-600/10 text-purple-600" : ""
+          }
+        >
+          🇺🇸 {t.language.english}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
+        <DropdownMenuItem
+          onClick={() => setLanguage("es")}
+          className={
+            language === "es" ? "bg-purple-600/10 text-purple-600" : ""
+          }
+        >
+          🇪🇸 {t.language.spanish}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

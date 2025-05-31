@@ -1,7 +1,7 @@
 // app/actions/getRepos.ts (or in pages/api)
 export async function getRepos(): Promise<Repo[]> {
   const res = await fetch(
-    "https://api.github.com/users/alexandrearabian/repos",
+    "https://api.github.com/users/alexandrearabian/starred",
   );
   if (!res.ok) return [];
 
@@ -18,6 +18,7 @@ export type Repo = {
   name: string;
   description: string;
   html_url: string;
+  homepage?: string;
   language: string;
   stargazers_count: number;
 };
