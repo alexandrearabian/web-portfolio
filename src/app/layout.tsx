@@ -54,7 +54,7 @@ export default function RootLayout({
       className={`${geist.variable} ${jetbrains.variable} ${inter.variable} ${spaceGrotesk.variable} ${firaCode.variable}`}
       suppressHydrationWarning
     >
-      <body className="overflow-x-hidden">
+      <body className="overflow-x-hidden" suppressHydrationWarning>
         <LanguageProvider>
           <ThemeProvider
             attribute="class"

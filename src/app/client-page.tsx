@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Linkedin, Mail, Twitter } from "lucide-react";
+import { Github } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import {
@@ -11,7 +11,7 @@ import {
   CardFooter,
   CardHeader,
 } from "~/components/ui/card";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLanguage } from "~/contexts/LanguageContext";
 import type { Repo } from "./actions/getRepos";
 
@@ -20,9 +20,10 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
   const [focusThumbs, setFocusThumbs] = useState(false);
   const [focusAmazed, setFocusAmazed] = useState(false);
 
-  // Split the name into letters for animation
-  const nameText = "Alexandre Arabian";
-  const letters = nameText.split("");
+  const visibleRepos = useMemo(() => {
+    const excluded = new Set(["witr", "tomato-timer", "simple-todo"]);
+    return repos.filter((repo) => !excluded.has(repo.name));
+  }, [repos]);
 
   return (
     <div className="bg-background relative mt-16 min-h-screen overflow-x-hidden">
@@ -106,12 +107,12 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <h1 className="text-foreground font-space bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-5xl leading-none font-bold tracking-tight sm:text-6xl sm:leading-normal md:text-7xl">
+            <h1 className="text-foreground font-space bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl sm:leading-normal md:text-7xl">
               <span className="block sm:inline">{t.hero.greeting}</span>
               <span className="hidden sm:inline">&nbsp;</span>
               <br className="block sm:hidden" />
               <span className="bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-                <span className="-mt-6 block sm:mt-0 sm:inline">
+                <span className="mt-2 block sm:mt-0 sm:inline">
                   {"Alexandre".split("").map((letter, index) => (
                     <motion.span
                       key={index}
@@ -152,7 +153,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
                 </span>
                 <span className="hidden sm:inline">&nbsp;</span>
                 <br className="block sm:hidden" />
-                <span className="-mt-8 block sm:mt-0 sm:inline">
+                <span className="mt-2 block sm:mt-0 sm:inline">
                   {"Arabian".split("").map((letter, index) => (
                     <motion.span
                       key={index + 9}
@@ -364,7 +365,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
         >
           {t.projects.title}
         </motion.h2>
-        {repos.length === 0 ? (
+        {visibleRepos.length === 0 ? (
           <motion.div
             className="text-muted-foreground text-center"
             initial={{ opacity: 0 }}
@@ -376,7 +377,56 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
           </motion.div>
         ) : (
           <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {repos.slice(0, 6).map((repo: Repo, index) => (
+            <motion.div
+              key="globalthy"
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.6,
+                delay: 0,
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+              }}
+              whileHover={{
+                y: -4,
+                transition: { duration: 0.3, ease: "easeOut" },
+              }}
+            >
+              <Card className="group bg-background relative flex h-full flex-col overflow-hidden rounded-lg border shadow-lg transition-colors hover:border-purple-500">
+                <CardHeader className="pb-3">
+                  <h3 className="font-space truncate text-base font-semibold sm:text-lg">
+                    Globalthy
+                  </h3>
+                  <CardDescription className="font-inter line-clamp-3 text-xs sm:text-sm">
+                    Globalthy app – productized web experience.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 pb-3">
+                  <span className="inline-block rounded-full bg-purple-600/10 px-2.5 py-1 font-mono text-xs text-purple-600 sm:px-3">
+                    Web App
+                  </span>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-2 pt-3 sm:flex-row sm:gap-3">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full sm:w-auto"
+                  >
+                    <Link
+                      href="https://app.globalthy.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-space flex w-full items-center justify-center rounded-full bg-purple-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-purple-500 sm:w-auto sm:px-4 sm:text-sm"
+                    >
+                      {t.projects.viewProjectButton}
+                    </Link>
+                  </motion.div>
+                </CardFooter>
+              </Card>
+            </motion.div>
+            {visibleRepos.slice(0, 6).map((repo: Repo, index) => (
               <motion.div
                 key={repo.id}
                 initial={{ opacity: 0, y: 32 }}
@@ -384,7 +434,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
                 viewport={{ once: true }}
                 transition={{
                   duration: 0.6,
-                  delay: index * 0.1,
+                  delay: (index + 1) * 0.1,
                   type: "spring",
                   stiffness: 300,
                   damping: 30,

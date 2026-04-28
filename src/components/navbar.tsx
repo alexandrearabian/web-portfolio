@@ -1,16 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "motion/react";
 import { ModeToggle } from "./mode-toggle";
 import { LanguageToggle } from "./language-toggle";
-import {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle,
-} from "~/components/ui/navigation-menu";
 import { cn } from "~/lib/utils";
 import { useEffect } from "react";
 import { useLanguage } from "~/contexts/LanguageContext";
@@ -106,24 +98,26 @@ export function Navbar() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <NavigationMenu className="container flex h-16 items-center px-8 md:h-20">
-          <NavigationMenuList className="gap-4 sm:gap-8 md:gap-12 lg:gap-16">
-            {navItems.map((item) => (
-              <NavigationMenuItem key={item.href}>
+        <nav className="container">
+          <div className="flex h-16 items-center justify-between px-4 sm:px-6 md:h-20 md:px-8">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-6 md:gap-8">
+              {navItems.map((item) => (
                 <a
+                  key={item.href}
                   href={item.href}
                   className={cn(
-                    navigationMenuTriggerStyle(),
-                    "font-space bg-transparent px-4 py-2 text-base font-medium transition-colors hover:bg-transparent hover:text-purple-500 focus:bg-transparent data-[active=true]:bg-transparent sm:px-6",
+                    "font-space text-foreground/90 hover:text-foreground focus-visible:ring-ring/50 inline-flex items-center rounded-md px-2.5 py-2 text-base font-semibold transition-colors focus-visible:ring-[3px] focus-visible:outline-none sm:px-3",
+                    "hover:text-purple-500",
                   )}
                   onClick={handleClick}
                 >
                   {item.label}
                 </a>
-              </NavigationMenuItem>
-            ))}
+              ))}
+            </div>
+
             <motion.div
-              className="flex items-center gap-4"
+              className="flex shrink-0 items-center gap-3 sm:gap-4"
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
@@ -131,8 +125,8 @@ export function Navbar() {
               <LanguageToggle />
               <ModeToggle />
             </motion.div>
-          </NavigationMenuList>
-        </NavigationMenu>
+          </div>
+        </nav>
       </motion.div>
     </motion.div>
   );
