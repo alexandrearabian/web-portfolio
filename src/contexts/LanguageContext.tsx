@@ -28,12 +28,7 @@ function getBrowserLanguage(): Language {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en");
-
-  useEffect(() => {
-    const detectedLanguage = getBrowserLanguage();
-    setLanguage(detectedLanguage);
-  }, []);
+  const [language, setLanguage] = useState<Language>(() => getBrowserLanguage());
 
   // Update the HTML lang attribute when language changes
   useEffect(() => {
