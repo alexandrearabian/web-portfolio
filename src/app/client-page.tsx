@@ -450,7 +450,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
                       {repo.name}
                     </h3>
                     <CardDescription className="font-inter line-clamp-3 text-xs sm:text-sm">
-                      {repo.description || t.projects.noDescription}
+                      {repo.description ?? t.projects.noDescription}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 pb-3">
