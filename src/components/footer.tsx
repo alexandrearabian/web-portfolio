@@ -99,7 +99,7 @@ export function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            © 2024 {t.footer.copyright} All rights reserved.
+            © 2026 {t.footer.copyright}
           </motion.p>
         </motion.div>
       </div>

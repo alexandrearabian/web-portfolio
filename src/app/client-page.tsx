@@ -21,8 +21,9 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
   const [focusAmazed, setFocusAmazed] = useState(false);
 
   const visibleRepos = useMemo(() => {
-    const excluded = new Set(["witr", "tomato-timer", "simple-todo"]);
-    return repos.filter((repo) => !excluded.has(repo.name));
+    // Render all starred PUBLIC repos (GitHub returns `private` when token is used).
+    const excluded = new Set(["witr"]);
+    return repos.filter((repo) => !repo.private && !excluded.has(repo.name));
   }, [repos]);
 
   return (
@@ -365,68 +366,58 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
         >
           {t.projects.title}
         </motion.h2>
-        {visibleRepos.length === 0 ? (
+        <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
           <motion.div
-            className="text-muted-foreground text-center"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            key="globalthy"
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{
+              duration: 0.6,
+              delay: 0,
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+            }}
+            whileHover={{
+              y: -4,
+              transition: { duration: 0.3, ease: "easeOut" },
+            }}
           >
-            <p className="font-inter">{t.projects.noRepos}</p>
-          </motion.div>
-        ) : (
-          <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <motion.div
-              key="globalthy"
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 0.6,
-                delay: 0,
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-              }}
-              whileHover={{
-                y: -4,
-                transition: { duration: 0.3, ease: "easeOut" },
-              }}
-            >
-              <Card className="group bg-background relative flex h-full flex-col overflow-hidden rounded-lg border shadow-lg transition-colors hover:border-purple-500">
-                <CardHeader className="pb-3">
-                  <h3 className="font-space truncate text-base font-semibold sm:text-lg">
-                    Globalthy
-                  </h3>
-                  <CardDescription className="font-inter line-clamp-3 text-xs sm:text-sm">
-                    Globalthy app – productized web experience.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 pb-3">
-                  <span className="inline-block rounded-full bg-purple-600/10 px-2.5 py-1 font-mono text-xs text-purple-600 sm:px-3">
-                    Web App
-                  </span>
-                </CardContent>
-                <CardFooter className="flex flex-col gap-2 pt-3 sm:flex-row sm:gap-3">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full sm:w-auto"
+            <Card className="group bg-background relative flex h-full flex-col overflow-hidden rounded-lg border shadow-lg transition-colors hover:border-purple-500">
+              <CardHeader className="pb-3">
+                <h3 className="font-space truncate text-base font-semibold sm:text-lg">
+                  Globalthy
+                </h3>
+                <CardDescription className="font-inter line-clamp-3 text-xs sm:text-sm">
+                  Globalthy app – productized web experience.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 pb-3">
+                <span className="inline-block rounded-full bg-purple-600/10 px-2.5 py-1 font-mono text-xs text-purple-600 sm:px-3">
+                  Web App
+                </span>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-2 pt-3 sm:flex-row sm:gap-3">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto"
+                >
+                  <Link
+                    href="https://app.globalthy.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-space flex w-full items-center justify-center rounded-full bg-purple-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-purple-500 sm:w-auto sm:px-4 sm:text-sm"
                   >
-                    <Link
-                      href="https://app.globalthy.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-space flex w-full items-center justify-center rounded-full bg-purple-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-purple-500 sm:w-auto sm:px-4 sm:text-sm"
-                    >
-                      {t.projects.viewProjectButton}
-                    </Link>
-                  </motion.div>
-                </CardFooter>
-              </Card>
-            </motion.div>
-            {visibleRepos.slice(0, 6).map((repo: Repo, index) => (
+                    {t.projects.viewProjectButton}
+                  </Link>
+                </motion.div>
+              </CardFooter>
+            </Card>
+          </motion.div>
+
+          {visibleRepos.map((repo: Repo, index) => (
               <motion.div
                 key={repo.id}
                 initial={{ opacity: 0, y: 32 }}
@@ -496,7 +487,18 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
                 </Card>
               </motion.div>
             ))}
-          </div>
+        </div>
+
+        {visibleRepos.length === 0 && (
+          <motion.div
+            className="text-muted-foreground mt-10 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <p className="font-inter">{t.projects.noRepos}</p>
+          </motion.div>
         )}
       </motion.section>
 

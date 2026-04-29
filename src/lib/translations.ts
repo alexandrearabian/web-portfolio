@@ -8,7 +8,7 @@ export const translations = {
     hero: {
       greeting: "Hi, I'm",
       description:
-        "A passionate software engineer and web developer crafting beautiful, functional, and user-friendly digital experiences.",
+        "A passionate software engineer and web developer crafting cool, and user-friendly digital experiences.",
       contactButton: "Contact Me",
       downloadCvButton: "Download CV",
       viewWorkButton: "View My Work",
@@ -25,8 +25,7 @@ export const translations = {
     },
     projects: {
       title: "Projects",
-      noRepos:
-        "No starred repositories found. Star some repositories on GitHub to showcase them here!",
+      noRepos: "No starred repositories found.",
       githubButton: "Github",
       viewProjectButton: "View Project →",
       noDescription: "No description available",
@@ -55,7 +54,7 @@ export const translations = {
     hero: {
       greeting: "Hola, soy",
       description:
-        "Un ingeniero de software apasionado y desarrollador web que crea experiencias digitales hermosas, funcionales y fáciles de usar.",
+        "Un ingeniero de software y desarrollador web que crea experiencias digitales funcionales y fáciles de usar.",
       contactButton: "Contáctame",
       downloadCvButton: "Descargar CV",
       viewWorkButton: "Ver Mi Trabajo",
@@ -67,13 +66,12 @@ export const translations = {
       paragraph2:
         "Con experiencia en tecnologías web modernas y un buen ojo para el diseño, construyo aplicaciones que son tanto hermosas como funcionales.",
       paragraph3:
-        "Cuando no estoy programando, puedes encontrarme dibujando, jugando ajedrez, programando y... oh.",
+        "Cuando no estoy programando, estoy dibujando, jugando al ajedrez, programando y... ah.",
       skillsTitle: "Habilidades",
     },
     projects: {
       title: "Proyectos",
-      noRepos:
-        "No se encontraron repositorios marcados como favoritos. ¡Marca algunos repositorios en GitHub para mostrarlos aquí!",
+      noRepos: "No se encontraron repositorios marcados como favoritos.",
       githubButton: "Github",
       viewProjectButton: "Ver Proyecto →",
       noDescription: "Sin descripción disponible",
