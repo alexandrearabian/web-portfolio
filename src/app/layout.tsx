@@ -7,7 +7,7 @@ import { Navbar } from "~/components/navbar";
 import { Footer } from "~/components/footer";
 
 export const metadata: Metadata = {
-  title: "Alexandre Arabian — Software engineer",
+  title: "Alexandre Arabian - Software engineer",
   description:
     "Portfolio of Alexandre Arabian, software engineer and web developer.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
@@ -45,12 +45,7 @@ export default function RootLayout({
           Skip to content
         </a>
         <LanguageProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+          <ThemeProvider>
             <Navbar />
             <main id="main">{children}</main>
             <Footer />

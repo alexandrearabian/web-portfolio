@@ -1,16 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { MotionConfig } from "motion/react";
 
-export function ThemeProvider({
-  children,
-  ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
-  return (
-    <NextThemesProvider {...props}>
-      <MotionConfig reducedMotion="user">{children}</MotionConfig>
-    </NextThemesProvider>
-  );
+// Single fixed (light) theme, no toggle — this just centralizes the
+// reduced-motion setting for every Motion component on the page.
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
 }
