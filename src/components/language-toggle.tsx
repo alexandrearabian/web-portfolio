@@ -1,53 +1,34 @@
 "use client";
 
-import * as React from "react";
-import { Languages } from "lucide-react";
-import { motion } from "motion/react";
 import { useLanguage } from "~/contexts/LanguageContext";
-
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { cn } from "~/lib/utils";
 
 export function LanguageToggle() {
   const { language, setLanguage, t } = useLanguage();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <motion.div
-          whileHover={{ scale: 1.1, rotate: 5 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+    <div
+      role="group"
+      aria-label={t.language.toggle}
+      className="flex rounded-full font-mono text-[11px] uppercase"
+    >
+      {(["en", "es"] as const).map((lang) => (
+        <button
+          key={lang}
+          type="button"
+          onClick={() => setLanguage(lang)}
+          aria-pressed={language === lang}
+          aria-label={lang === "en" ? t.language.english : t.language.spanish}
+          className={cn(
+            "rounded-full px-2 py-1.5 transition-colors active:scale-95",
+            language === lang
+              ? "text-brand"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
-          <Button variant="outline" size="icon">
-            <Languages className="h-[1.2rem] w-[1.2rem] transition-all" />
-            <span className="sr-only">{t.language.toggle}</span>
-          </Button>
-        </motion.div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => setLanguage("en")}
-          className={
-            language === "en" ? "bg-purple-600/10 text-purple-600" : ""
-          }
-        >
-          🇺🇸 {t.language.english}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setLanguage("es")}
-          className={
-            language === "es" ? "bg-purple-600/10 text-purple-600" : ""
-          }
-        >
-          🇪🇸 {t.language.spanish}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {lang}
+        </button>
+      ))}
+    </div>
   );
 }

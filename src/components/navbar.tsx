@@ -1,133 +1,84 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { ModeToggle } from "./mode-toggle";
 import { LanguageToggle } from "./language-toggle";
 import { cn } from "~/lib/utils";
-import { useEffect } from "react";
 import { useLanguage } from "~/contexts/LanguageContext";
+
+const sections = ["about", "projects", "contact"] as const;
 
 export function Navbar() {
   const { t } = useLanguage();
+  const [active, setActive] = useState<string | null>(null);
 
-  const navItems = [
-    { href: "#about", label: t.nav.about },
-    { href: "#projects", label: t.nav.projects },
-    { href: "#contact", label: t.nav.contact },
-  ];
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-
-    if (element) {
-      const navbar =
-        document.querySelector("nav") ??
-        document.querySelector('[role="navigation"]');
-      const navbarHeight = navbar ? navbar.offsetHeight + 20 : 100;
-
-      const elementPosition = element.offsetTop;
-      const offsetPosition = elementPosition - navbarHeight;
-
-      const startPosition = window.pageYOffset;
-      const distance = offsetPosition - startPosition;
-      const duration = 1000;
-      let start: number | null = null;
-
-      function animation(currentTime: number) {
-        start ??= currentTime;
-        const timeElapsed = currentTime - start;
-        const run = ease(timeElapsed, startPosition, distance, duration);
-        window.scrollTo(0, run);
-        if (timeElapsed < duration) requestAnimationFrame(animation);
-      }
-
-      function ease(t: number, b: number, c: number, d: number) {
-        t /= d / 2;
-        if (t < 1) return (c / 2) * t * t + b;
-        t--;
-        return (-c / 2) * (t * (t - 2) - 1) + b;
-      }
-
-      requestAnimationFrame(animation);
-    }
-  };
-
-  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const href = event.currentTarget.getAttribute("href");
-    if (href?.startsWith("#")) {
-      const sectionId = href.substring(1);
-      scrollToSection(sectionId);
-    }
-  };
-
+  // Highlight the section crossing the middle of the viewport.
   useEffect(() => {
-    const updateHeroButtons = () => {
-      const heroButtons = document.querySelectorAll('a[href^="#"]');
-      heroButtons.forEach((button) => {
-        const existingHandler = (button as HTMLAnchorElement).onclick;
-        if (!existingHandler) {
-          (button as HTMLAnchorElement).addEventListener("click", (e) => {
-            e.preventDefault();
-            const href = (e.target as HTMLAnchorElement).getAttribute("href");
-            if (href?.startsWith("#")) {
-              const sectionId = href.substring(1);
-              scrollToSection(sectionId);
-            }
-          });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+          else if (
+            entry.target.id === "about" &&
+            entry.boundingClientRect.top > 0
+          )
+            setActive(null);
         }
-      });
-    };
-
-    const timer = setTimeout(updateHeroButtons, 1000);
-    return () => clearTimeout(timer);
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <motion.div
-      className="bg-background supports-[backdrop-filter]:bg-background/70 sticky top-0 z-50 w-full border-b backdrop-blur"
-      initial={{ y: -100, opacity: 0 }}
+    <motion.header
+      className="fixed inset-x-0 top-3 z-50 flex justify-center px-3 sm:top-5"
+      initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
     >
-      <motion.div
-        className="flex justify-center"
-        initial={{ opacity: 0, x: -24 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      >
-        <nav className="container">
-          <div className="flex h-16 items-center justify-between px-4 sm:px-6 md:h-20 md:px-8">
-            <div className="flex min-w-0 items-center gap-3 sm:gap-6 md:gap-8">
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "font-space text-foreground/90 hover:text-foreground focus-visible:ring-ring/50 inline-flex items-center rounded-md px-2.5 py-2 text-base font-semibold transition-colors focus-visible:ring-[3px] focus-visible:outline-none sm:px-3",
-                    "hover:text-purple-500",
-                  )}
-                  onClick={handleClick}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </div>
-
-            <motion.div
-              className="flex shrink-0 items-center gap-3 sm:gap-4"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <LanguageToggle />
-              <ModeToggle />
-            </motion.div>
-          </div>
-        </nav>
-      </motion.div>
-    </motion.div>
+      <nav className="bg-background/70 flex items-center gap-1 rounded-full border p-1.5 shadow-[0_8px_32px_-12px_color-mix(in_oklch,var(--brand)_35%,transparent),inset_0_1px_0_0_oklch(1_0_0/0.06)] backdrop-blur-xl">
+        <a
+          href="#"
+          className="hover:text-brand hidden px-3 font-mono text-sm font-medium tracking-tight transition-colors sm:block"
+          aria-label="Back to top"
+        >
+          AA
+        </a>
+        <span className="bg-border mx-1 hidden h-5 w-px sm:block" />
+        {sections.map((id) => (
+          <a
+            key={id}
+            href={`#${id}`}
+            aria-current={active === id ? "true" : undefined}
+            className={cn(
+              // Fixed width so the pill doesn't resize when the label's
+              // language changes (e.g. "About" vs "Acerca").
+              "relative w-[4.5rem] rounded-full py-1.5 text-center text-sm font-medium transition-colors sm:w-20",
+              active === id
+                ? "text-background"
+                : "text-foreground/70 hover:text-foreground",
+            )}
+          >
+            {active === id && (
+              <motion.span
+                layoutId="nav-pill"
+                className="bg-foreground absolute inset-0 -z-10 rounded-full"
+                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+              />
+            )}
+            {t.nav[id]}
+          </a>
+        ))}
+        <span className="bg-border mx-1 h-5 w-px" />
+        <LanguageToggle />
+        <ModeToggle />
+      </nav>
+    </motion.header>
   );
 }

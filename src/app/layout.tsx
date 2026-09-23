@@ -2,18 +2,20 @@ import "~/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "~/contexts/LanguageContext";
 import { type Metadata } from "next";
-import { Geist } from "next/font/google";
-import { JetBrains_Mono } from "next/font/google";
-import { Inter } from "next/font/google";
-import { Space_Grotesk } from "next/font/google";
-import { Fira_Code } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "~/components/navbar";
 import { Footer } from "~/components/footer";
 
 export const metadata: Metadata = {
-  title: "Alexandre Arabian",
-  description: "Web Portfolio",
+  title: "Alexandre Arabian — Software engineer",
+  description:
+    "Portfolio of Alexandre Arabian, software engineer and web developer.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
+  openGraph: {
+    title: "Alexandre Arabian",
+    description: "Software engineer and web developer.",
+    type: "website",
+  },
 };
 
 const geist = Geist({
@@ -21,28 +23,9 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
-const jetbrains = JetBrains_Mono({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-});
-
-const firaCode = Fira_Code({
-  subsets: ["latin"],
-  variable: "--font-fira-code",
-  display: "swap",
+  variable: "--font-geist-mono",
 });
 
 export default function RootLayout({
@@ -51,10 +34,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${jetbrains.variable} ${inter.variable} ${spaceGrotesk.variable} ${firaCode.variable}`}
+      className={`${geist.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="overflow-x-hidden" suppressHydrationWarning>
+      <body className="overflow-x-hidden font-sans" suppressHydrationWarning>
+        <a
+          href="#main"
+          className="bg-foreground text-background sr-only z-[60] rounded-full px-4 py-2 text-sm focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
+        >
+          Skip to content
+        </a>
         <LanguageProvider>
           <ThemeProvider
             attribute="class"
@@ -63,7 +52,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Navbar />
-            {children}
+            <main id="main">{children}</main>
             <Footer />
           </ThemeProvider>
         </LanguageProvider>

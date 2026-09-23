@@ -1,108 +1,48 @@
 "use client";
 
-import Link from "next/link";
-import { motion } from "motion/react";
 import { Github, Linkedin, Mail } from "lucide-react";
 import { useLanguage } from "~/contexts/LanguageContext";
+const EMAIL = "a.arabian.j@gmail.com";
+
+const links = [
+  { href: `mailto:${EMAIL}`, label: "Send email", Icon: Mail },
+  {
+    href: "https://github.com/alexandrearabian",
+    label: "GitHub profile",
+    Icon: Github,
+  },
+  {
+    href: "https://www.linkedin.com/in/alexandre-arabian-jensezian/",
+    label: "LinkedIn profile",
+    Icon: Linkedin,
+  },
+];
 
 export function Footer() {
   const { t } = useLanguage();
 
   return (
-    <motion.footer
-      className="bg-background/95 relative z-50 border-t backdrop-blur-sm"
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6 }}
-    >
-      <div className="container mx-auto px-4 py-12 sm:px-6 md:px-8">
-        <motion.div
-          className="flex flex-col items-center space-y-6"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          {/* Social Links */}
-          <div className="flex justify-center space-x-6 sm:space-x-8">
-            <motion.div
-              whileHover={{ scale: 1.2, y: -5 }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Link
-                href="mailto:a.arabian.j@gmail.com"
+    <footer className="shell">
+      <div className="flex flex-col-reverse items-center justify-between gap-6 border-t py-10 sm:flex-row">
+        <p className="text-muted-foreground font-mono text-xs">
+          © {new Date().getFullYear()} {t.footer.copyright}
+        </p>
+        <ul className="flex gap-2">
+          {links.map(({ href, label, Icon }) => (
+            <li key={href}>
+              <a
+                href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground/70 transition-colors duration-200 hover:text-purple-600"
-                aria-label="Send email"
+                aria-label={label}
+                className="text-muted-foreground hover:text-brand hover:bg-brand/10 grid size-10 place-items-center rounded-full transition-all duration-300 hover:-translate-y-0.5 active:scale-90"
               >
-                <Mail className="h-5 w-5 sm:h-6 sm:w-6" />
-              </Link>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.2, y: -5 }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Link
-                href="https://github.com/alexandrearabian"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/70 transition-colors duration-200 hover:text-purple-600"
-                aria-label="GitHub profile"
-              >
-                <Github className="h-5 w-5 sm:h-6 sm:w-6" />
-              </Link>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.2, y: -5 }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Link
-                href="https://www.linkedin.com/in/alexandre-arabian-jensezian/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/70 transition-colors duration-200 hover:text-purple-600"
-                aria-label="LinkedIn profile"
-              >
-                <Linkedin className="h-5 w-5 sm:h-6 sm:w-6" />
-              </Link>
-            </motion.div>
-            {/*
-            <motion.div
-              whileHover={{ scale: 1.2, y: -5 }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Link
-                href="https://twitter.com/alxarabian"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/70 transition-colors duration-200 hover:text-purple-600"
-                aria-label="Twitter profile"
-              >
-                <Twitter className="h-5 w-5 sm:h-6 sm:w-6" />
-              </Link>
-            </motion.div> */}
-          </div>
-
-          {/* Copyright */}
-          <motion.p
-            className="text-muted-foreground font-inter text-xs sm:text-sm"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            © 2026 {t.footer.copyright}
-          </motion.p>
-        </motion.div>
+                <Icon className="size-[18px]" strokeWidth={1.75} />
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
-    </motion.footer>
+    </footer>
   );
 }

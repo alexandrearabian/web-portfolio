@@ -7,14 +7,15 @@ export const translations = {
     },
     hero: {
       greeting: "Hi, I'm",
+      role: "Software engineer",
       description:
         "A passionate software engineer and web developer crafting cool, and user-friendly digital experiences.",
-      contactButton: "Contact Me",
+      contactButton: "Contact me",
       downloadCvButton: "Download CV",
-      viewWorkButton: "View My Work",
+      viewWorkButton: "View my work",
     },
     about: {
-      title: "About Me",
+      title: "About me",
       paragraph1:
         "I'm a software engineer with a passion for creating elegant solutions to complex problems.",
       paragraph2:
@@ -27,14 +28,16 @@ export const translations = {
       title: "Projects",
       noRepos: "No starred repositories found.",
       githubButton: "Github",
-      viewProjectButton: "View Project →",
+      viewProjectButton: "View project",
       noDescription: "No description available",
     },
     contact: {
-      title: "Get In Touch",
+      title: "Get in touch",
       description:
         "I'm always open to discussing new projects, creative ideas, or opportunities to bring your vision to life. Feel free to reach out!",
       emailButton: "Send me an email",
+      emailCopied: "Email copied to clipboard",
+      linkedinButton: "Connect on LinkedIn",
     },
     footer: {
       copyright: "Alexandre Arabian.",
@@ -53,14 +56,15 @@ export const translations = {
     },
     hero: {
       greeting: "Hola, soy",
+      role: "Ingeniero de software",
       description:
         "Un ingeniero de software y desarrollador web que crea experiencias digitales funcionales y fáciles de usar.",
       contactButton: "Contáctame",
       downloadCvButton: "Descargar CV",
-      viewWorkButton: "Ver Mi Trabajo",
+      viewWorkButton: "Ver mi trabajo",
     },
     about: {
-      title: "Acerca de Mí",
+      title: "Acerca de mí",
       paragraph1:
         "Soy un ingeniero de software con pasión por crear soluciones elegantes a problemas complejos.",
       paragraph2:
@@ -73,14 +77,16 @@ export const translations = {
       title: "Proyectos",
       noRepos: "No se encontraron repositorios marcados como favoritos.",
       githubButton: "Github",
-      viewProjectButton: "Ver Proyecto →",
+      viewProjectButton: "Ver proyecto",
       noDescription: "Sin descripción disponible",
     },
     contact: {
-      title: "Ponte en Contacto",
+      title: "Ponte en contacto",
       description:
         "Siempre estoy abierto a discutir nuevos proyectos, ideas creativas u oportunidades para dar vida a tu visión. ¡No dudes en contactarme!",
       emailButton: "Envíame un email",
+      emailCopied: "Email copiado al portapapeles",
+      linkedinButton: "Conecta en LinkedIn",
     },
     footer: {
       copyright: "Alexandre Arabian.",
@@ -103,6 +109,7 @@ type TranslationStructure = {
   };
   hero: {
     greeting: string;
+    role: string;
     description: string;
     contactButton: string;
     downloadCvButton: string;
@@ -126,6 +133,8 @@ type TranslationStructure = {
     title: string;
     description: string;
     emailButton: string;
+    emailCopied: string;
+    linkedinButton: string;
   };
   footer: {
     copyright: string;

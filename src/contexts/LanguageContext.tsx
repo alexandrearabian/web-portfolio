@@ -16,25 +16,26 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 );
 
 function getBrowserLanguage(): Language {
-  if (typeof window === "undefined") return "en";
-
-  const browserLang = navigator.language;
-  if (!browserLang) return "en";
-
-  const langCode = browserLang.toLowerCase().split("-")[0];
-  if (!langCode) return "en";
-
+  const langCode = navigator.language.toLowerCase().split("-")[0];
   return langCode === "es" ? "es" : "en";
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => getBrowserLanguage());
+  // Always render "en" on the server and on the first client render, so the
+  // markup matches. Only switch to the browser's language after mount.
+  const [language, setLanguage] = useState<Language>("en");
+
+  useEffect(() => {
+    // Syncing from a browser-only API (navigator.language): this can't be
+    // read during render without a server/client mismatch, so a one-off
+    // setState on mount is intentional here, not a missed derivation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLanguage(getBrowserLanguage());
+  }, []);
 
   // Update the HTML lang attribute when language changes
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.lang = language;
-    }
+    document.documentElement.lang = language;
   }, [language]);
 
   const value: LanguageContextType = {
@@ -44,7 +45,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
   );
 }
 
