@@ -10,6 +10,7 @@ const repoSchema = z.object({
   homepage: z.string().nullable().optional(),
   language: z.string().nullable().optional(),
   stargazers_count: z.number().optional(),
+  owner: z.object({ login: z.string() }),
 });
 
 const reposSchema = z.array(repoSchema);
@@ -38,9 +39,10 @@ export async function getRepos(): Promise<Repo[]> {
     for (let page = 1; page <= maxPages; page++) {
       const url = `https://api.github.com/users/alexandrearabian/starred?per_page=${perPage}&page=${page}`;
       const attempt = async (withAuth: boolean) => {
-        const headers: HeadersInit = withAuth && token
-          ? { ...baseHeaders, Authorization: `token ${token}` }
-          : baseHeaders;
+        const headers: HeadersInit =
+          withAuth && token
+            ? { ...baseHeaders, Authorization: `token ${token}` }
+            : baseHeaders;
         return await fetch(url, {
           headers,
           cache: "no-store",
@@ -73,8 +75,10 @@ export async function getRepos(): Promise<Repo[]> {
       }
     }
 
-    // Ensure we only return public repos.
-    return all.filter((r) => !r.private);
+    // Only public repos I own; stars on other people's projects are skipped.
+    return all.filter(
+      (r) => !r.private && r.owner.login === "alexandrearabian",
+    );
   } catch {
     return [];
   }

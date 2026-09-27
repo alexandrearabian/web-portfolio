@@ -1,13 +1,24 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Home, Menu, X } from "lucide-react";
+import { Home, Menu, Moon, Sun, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LanguageToggle } from "./language-toggle";
 import { cn } from "~/lib/utils";
 import { useLanguage } from "~/contexts/LanguageContext";
 
 const sections = ["about", "experience", "projects", "contact"] as const;
+
+// Icons swap via the dark: variant, so the button needs no React state
+// and matches the theme the inline script in layout.tsx already applied.
+function toggleTheme() {
+  const root = document.documentElement;
+  const next = root.dataset.theme === "dark" ? "light" : "dark";
+  root.dataset.theme = next;
+  try {
+    localStorage.setItem("theme", next);
+  } catch {}
+}
 
 export function Navbar() {
   const { t } = useLanguage();
@@ -44,7 +55,7 @@ export function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
       >
-        <nav className="bg-card/80 flex items-center gap-1 rounded-full border p-1.5 shadow-[0_10px_36px_-16px_color-mix(in_oklch,var(--brand)_22%,transparent),inset_0_1px_0_0_oklch(1_0_0/0.7)] backdrop-blur-xl">
+        <nav className="bg-card/80 flex items-center gap-1 rounded-full border p-1.5 shadow-[0_10px_36px_-16px_color-mix(in_oklch,var(--brand)_22%,transparent),inset_0_1px_0_0_var(--highlight)] backdrop-blur-xl">
           <a
             href="#"
             className="text-foreground/70 hover:text-brand hidden shrink-0 place-items-center px-3 transition-colors sm:grid"
@@ -91,6 +102,17 @@ export function Navbar() {
             aria-expanded={menuOpen}
           >
             <Menu className="size-[18px]" strokeWidth={1.75} />
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="text-foreground/70 hover:text-brand grid size-9 place-items-center rounded-full transition-colors"
+            aria-label={t.theme.toggle}
+            title={t.theme.toggle}
+          >
+            <Moon className="size-[18px] dark:hidden" strokeWidth={1.75} />
+            <Sun className="hidden size-[18px] dark:block" strokeWidth={1.75} />
           </button>
 
           <span className="bg-border mx-1 h-5 w-px" />

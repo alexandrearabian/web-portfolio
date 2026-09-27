@@ -7,6 +7,7 @@ import {
   Check,
   Download,
   Github,
+  Globe,
   Linkedin,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -19,7 +20,6 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 const EMAIL = "alexandre.arabian.j@gmail.com";
 const PHONE = "+34 677 09 69 12";
 const LINKEDIN_URL = "https://www.linkedin.com/in/alexandre-arabian-jensezian/";
-const EXCLUDED_REPOS = new Set(["witr"]);
 
 // Proper nouns: identical in every locale, so they live in code, not
 // translations. The "AI & automation" group's items are phrases, not
@@ -116,6 +116,17 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Card nested in a faint tinted bezel; the one card style on the page.
+function Frame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-foreground/[0.035] rounded-[1.35rem] p-1.5">
+      <div className="bg-card h-full rounded-[calc(1.35rem-0.375rem)] p-4 shadow-[inset_0_1px_0_var(--highlight)] sm:p-5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="text-muted-foreground mb-4 font-mono text-xs tracking-[0.14em] uppercase">
@@ -154,26 +165,20 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
   ];
 
   const projects = useMemo(
-    () => [
-      {
-        key: "globalthy",
-        name: "Globalthy",
-        description: "Globalthy app – productized web experience.",
-        tag: "Web App",
-        href: "https://app.globalthy.com",
-        github: null,
-      },
-      ...repos
-        .filter((repo) => !repo.private && !EXCLUDED_REPOS.has(repo.name))
-        .map((repo) => ({
-          key: repo.id,
-          name: repo.name,
-          description: repo.description ?? t.projects.noDescription,
-          tag: repo.language,
-          href: repo.homepage ? repo.homepage : repo.html_url,
-          github: repo.homepage ? repo.html_url : null,
-        })),
-    ],
+    () =>
+      repos.map((repo) => ({
+        key: repo.id,
+        // "mar-jabones" -> "Mar Jabones"
+        name: repo.name
+          .replace(/[-_]+/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
+        description: repo.description ?? t.projects.noDescription,
+        tag: repo.language,
+        // GitHub returns "" for an unset homepage, hence || not ??.
+        site: repo.homepage || null,
+        href: repo.homepage || repo.html_url,
+        github: repo.html_url,
+      })),
     [repos, t],
   );
 
@@ -193,7 +198,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             decorative SVG, and both sit behind the content via -z-10. */}
         <div
           aria-hidden
-          className="bg-brand/25 pointer-events-none absolute top-1/2 right-0 -z-10 size-[36rem] translate-x-1/3 -translate-y-1/2 rounded-full blur-[130px]"
+          className="bg-brand/25 motion-safe:animate-drift pointer-events-none absolute top-1/2 right-0 -z-10 size-[36rem] translate-x-1/3 -translate-y-1/2 rounded-full blur-[130px]"
         />
         <span
           aria-hidden
@@ -248,7 +253,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
               aria-hidden
             >
               <div className="bg-foreground/[0.04] ring-foreground/8 absolute inset-0 rounded-[32%] p-2 shadow-[0_32px_70px_-26px_color-mix(in_oklch,var(--brand)_55%,transparent)] ring-1">
-                <div className="bg-card size-full rounded-[26%] shadow-[inset_0_1px_0_oklch(1_0_0/0.8)]" />
+                <div className="bg-card size-full rounded-[26%] shadow-[inset_0_1px_0_var(--highlight)]" />
               </div>
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
@@ -337,45 +342,38 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             className="mt-16 grid gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-5"
           >
             {skillGroups.map((group) => (
-              <div
-                key={group.key}
-                className="bg-foreground/[0.035] rounded-[1.35rem] p-1.5"
-              >
-                <div className="bg-card h-full rounded-[calc(1.35rem-0.375rem)] p-4 shadow-[inset_0_1px_0_oklch(1_0_0/0.7)] sm:p-5">
-                  <GroupLabel>{group.label}</GroupLabel>
-                  <ul className="space-y-2.5 font-mono text-sm">
-                    {group.items.map((skill) => (
-                      <li
-                        key={skill}
-                        className="group hover:text-brand flex items-center gap-2.5 transition-colors"
-                      >
-                        <span className="bg-border group-hover:bg-brand size-1 shrink-0 rounded-full transition-colors" />
-                        {skill}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-
-            <div className="bg-foreground/[0.035] rounded-[1.35rem] p-1.5">
-              <div className="bg-card h-full rounded-[calc(1.35rem-0.375rem)] p-4 shadow-[inset_0_1px_0_oklch(1_0_0/0.7)] sm:p-5">
-                <GroupLabel>{t.languagesSpoken.title}</GroupLabel>
-                <ul className="space-y-2.5 text-sm">
-                  {t.languagesSpoken.items.map((item) => (
+              <Frame key={group.key}>
+                <GroupLabel>{group.label}</GroupLabel>
+                <ul className="space-y-2.5 font-mono text-sm">
+                  {group.items.map((skill) => (
                     <li
-                      key={item.name}
-                      className="flex items-baseline justify-between gap-3"
+                      key={skill}
+                      className="group hover:text-brand flex items-center gap-2.5 transition-colors"
                     >
-                      <span>{item.name}</span>
-                      <span className="text-muted-foreground font-mono text-xs">
-                        {t.languagesSpoken.levels[item.level]}
-                      </span>
+                      <span className="bg-border group-hover:bg-brand size-1 shrink-0 rounded-full transition-colors" />
+                      {skill}
                     </li>
                   ))}
                 </ul>
-              </div>
-            </div>
+              </Frame>
+            ))}
+
+            <Frame>
+              <GroupLabel>{t.languagesSpoken.title}</GroupLabel>
+              <ul className="space-y-2.5 text-sm">
+                {t.languagesSpoken.items.map((item) => (
+                  <li
+                    key={item.name}
+                    className="flex items-baseline justify-between gap-3"
+                  >
+                    <span>{item.name}</span>
+                    <span className="text-muted-foreground font-mono text-xs">
+                      {t.languagesSpoken.levels[item.level]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Frame>
           </FadeIn>
         </div>
       </section>
@@ -394,9 +392,12 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             "--surface": "oklch(1 0 0 / 5%)",
             "--border": "oklch(1 0 0 / 12%)",
             "--muted-foreground": "oklch(0.7 0.02 278)",
+            "--foreground": "oklch(0.97 0.006 278)",
+            "--card": "oklch(0.2 0.035 278)",
+            "--highlight": "oklch(1 0 0 / 0.07)",
           } as React.CSSProperties
         }
-        className="bg-background text-white"
+        className="bg-background border-y text-white"
       >
         <div className="shell py-24 md:py-32">
           <SectionHeading>{t.experience.title}</SectionHeading>
@@ -445,7 +446,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               {t.experience.education.items.map((item) => (
-                <div key={item.school} className="bg-surface rounded-2xl p-5">
+                <Frame key={item.school}>
                   <p className="font-medium">{item.degree}</p>
                   <p className="text-muted-foreground mt-1 text-sm">
                     {item.school}
@@ -453,7 +454,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
                   <p className="text-muted-foreground mt-2 font-mono text-xs">
                     {item.period}
                   </p>
-                </div>
+                </Frame>
               ))}
             </div>
           </FadeIn>
@@ -508,28 +509,33 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
                       {project.tag}
                     </span>
                   )}
-                  {project.github && (
+                  <a
+                    href={project.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${project.name} - ${t.projects.githubButton}`}
+                    title={t.projects.githubButton}
+                    className="text-muted-foreground hover:text-brand hover:bg-brand/10 relative z-10 grid size-9 place-items-center rounded-full transition-colors"
+                  >
+                    <Github className="size-4" />
+                  </a>
+                  {project.site && (
                     <a
-                      href={project.github}
+                      href={project.site}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`${project.name} - ${t.projects.githubButton}`}
-                      className="text-muted-foreground hover:text-brand hover:bg-brand/10 relative z-10 grid size-9 place-items-center rounded-full transition-colors"
+                      aria-label={`${project.name} - ${t.projects.viewProjectButton}`}
+                      title={t.projects.viewProjectButton}
+                      className="group-hover:bg-brand group-hover:text-brand-foreground hover:bg-brand hover:text-brand-foreground relative z-10 grid size-9 place-items-center rounded-full border transition-colors duration-500"
                     >
-                      <Github className="size-4" />
+                      <Globe className="size-4" />
                     </a>
                   )}
-                  <span
-                    aria-hidden
-                    className="group-hover:bg-brand group-hover:text-brand-foreground ease-out-expo grid size-9 place-items-center rounded-full border transition-all duration-500 group-hover:rotate-45"
-                  >
-                    <ArrowUpRight className="size-4" />
-                  </span>
                 </div>
               </motion.li>
             ))}
           </ul>
-          {projects.length === 1 && (
+          {projects.length === 0 && (
             <p className="text-muted-foreground mt-8 font-mono text-sm">
               {t.projects.noRepos}
             </p>

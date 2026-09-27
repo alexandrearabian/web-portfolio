@@ -6,14 +6,17 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "~/components/navbar";
 import { Footer } from "~/components/footer";
 
+// Runs before first paint so a saved dark theme never flashes light.
+const themeScript = `try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){}`;
+
 export const metadata: Metadata = {
-  title: "Alexandre Arabian - Software engineer",
+  title: "Alexandre Arabian · Fullstack developer in Barcelona",
   description:
-    "Portfolio of Alexandre Arabian, software engineer and web developer.",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+    "Fullstack developer in Barcelona, open to full-time roles and freelance projects: web apps, e-commerce and process automation.",
   openGraph: {
     title: "Alexandre Arabian",
-    description: "Software engineer and web developer.",
+    description:
+      "Fullstack developer open to full-time roles and freelance projects.",
     type: "website",
   },
 };
@@ -37,6 +40,9 @@ export default function RootLayout({
       className={`${geist.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="overflow-x-hidden font-sans" suppressHydrationWarning>
         <a
           href="#main"

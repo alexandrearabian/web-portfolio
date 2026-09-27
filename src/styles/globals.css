@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Theme is set on <html data-theme> by the toggle (see layout.tsx). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   --font-sans:
     var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
@@ -9,6 +12,19 @@
     var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo,
     monospace;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-drift: drift 22s ease-in-out infinite alternate;
+  @keyframes drift {
+    0% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(-6rem, 3rem) scale(1.12);
+    }
+    100% {
+      transform: translate(2rem, -4rem) scale(0.94);
+    }
+  }
 }
 
 @theme inline {
@@ -60,6 +76,36 @@
   --destructive: oklch(0.55 0.2 25);
   --border: oklch(0.9 0.014 278);
   --ring: oklch(0.492 0.264 278);
+
+  /* Top-edge sheen on cards and the nav pill. */
+  --highlight: oklch(1 0 0 / 0.75);
+
+  color-scheme: light;
+}
+
+/* Dark: same 278° hue family. The brand is lifted so it reads on a dark
+   field, and its foreground flips to ink so filled buttons keep contrast. */
+[data-theme="dark"] {
+  --brand: oklch(0.68 0.19 278);
+  --brand-foreground: oklch(0.15 0.03 278);
+
+  --background: oklch(0.13 0.012 278);
+  --foreground: oklch(0.96 0.006 278);
+
+  --surface: oklch(0.165 0.016 278);
+  --surface-deep: oklch(0.19 0.02 278);
+
+  --card: oklch(0.2 0.018 278);
+  --card-foreground: oklch(0.96 0.006 278);
+
+  --muted: oklch(0.2 0.018 278);
+  --muted-foreground: oklch(0.7 0.02 278);
+
+  --border: oklch(1 0 0 / 0.1);
+  --ring: oklch(0.68 0.19 278);
+  --highlight: oklch(1 0 0 / 0.06);
+
+  color-scheme: dark;
 }
 
 @layer base {

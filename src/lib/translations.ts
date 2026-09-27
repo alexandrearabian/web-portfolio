@@ -8,19 +8,19 @@ export const translations = {
     },
     hero: {
       greeting: "Hi, I'm",
-      role: "Software engineer",
+      role: "Fullstack developer · Open to work",
       description:
-        "Computer engineer from Barcelona building web platforms end to end, from interface to cloud automation.",
-      contactButton: "Contact me",
+        "I build web apps end to end, from interface to database to cloud, and automate the manual work in between. Available for full-time roles and freelance projects.",
+      contactButton: "Let's talk",
       downloadCvButton: "Download CV",
-      viewWorkButton: "View my work",
+      viewWorkButton: "See my work",
     },
     about: {
       title: "About me",
       paragraph1:
-        "I'm a computer engineer with a genuine curiosity for technology and problem solving.",
+        "I've taken a platform from first commit to production as its only developer, shipped client projects as a freelancer, and cut a manual process's time by 95% through automation.",
       paragraph2:
-        "Living and working across different countries shaped a flexible, collaborative approach. I'm always looking for new challenges to keep growing.",
+        "I'm a computer engineer (UPM) who is just as comfortable owning a project alone as working inside a team. Having lived in several countries, I'm used to multilingual, remote collaboration, and I care about clear communication as much as clean code.",
       skillGroups: {
         programming: "Programming",
         web: "Web & data",
@@ -98,23 +98,26 @@ export const translations = {
       },
     },
     spotlight: {
-      line: "Fluent in five languages. Comfortable in any codebase.",
+      line: "Five languages spoken. One goal: software that does its job.",
     },
     projects: {
-      title: "Projects",
-      noRepos: "No starred repositories found.",
-      githubButton: "Github",
-      viewProjectButton: "View project",
-      noDescription: "No description available",
+      title: "Selected work",
+      noRepos: "Projects coming soon.",
+      githubButton: "Source code",
+      viewProjectButton: "Visit live site",
+      noDescription: "No description yet.",
     },
     contact: {
-      title: "Get in touch",
+      title: "Let's work together",
       description:
-        "I'm always open to discussing new projects, creative ideas, or opportunities to bring your vision to life. Feel free to reach out!",
-      emailButton: "Send me an email",
+        "Hiring for a developer role, or need a website, web app or automation built? Tell me about it and I'll get back to you.",
+      emailButton: "Email me",
       emailCopied: "Email copied to clipboard",
       linkedinButton: "Connect on LinkedIn",
-      location: "Based in Barcelona, Spain",
+      location: "Based in Barcelona · Open to remote",
+    },
+    theme: {
+      toggle: "Toggle dark mode",
     },
     footer: {
       copyright: "Alexandre Arabian.",
@@ -127,26 +130,26 @@ export const translations = {
   },
   es: {
     nav: {
-      about: "Acerca",
+      about: "Sobre mí",
       experience: "Experiencia",
       projects: "Proyectos",
       contact: "Contacto",
     },
     hero: {
       greeting: "Hola, soy",
-      role: "Ingeniero informático",
+      role: "Desarrollador fullstack · Disponible",
       description:
-        "Ingeniero informático en Barcelona. Construyo plataformas web de principio a fin: interfaz, backend y automatización en la nube.",
-      contactButton: "Contáctame",
+        "Construyo aplicaciones web de principio a fin, de la interfaz a la base de datos y la nube, y automatizo el trabajo manual que hay entre medias. Disponible para empleo a tiempo completo y proyectos freelance.",
+      contactButton: "Hablemos",
       downloadCvButton: "Descargar CV",
       viewWorkButton: "Ver mi trabajo",
     },
     about: {
-      title: "Acerca de mí",
+      title: "Sobre mí",
       paragraph1:
-        "Soy ingeniero informático, con curiosidad genuina por la tecnología y la resolución de problemas.",
+        "He llevado una plataforma del primer commit a producción como único desarrollador, he entregado proyectos a clientes como freelance y he automatizado un proceso manual reduciendo su tiempo en un 95%.",
       paragraph2:
-        "Vivir y trabajar en distintos países me dio una mirada flexible y colaborativa del trabajo. Siempre busco nuevos retos donde seguir creciendo.",
+        "Soy ingeniero informático (UPM) y me siento igual de cómodo liderando un proyecto en solitario que trabajando en equipo. Después de vivir en varios países, estoy acostumbrado a colaborar en remoto y en varios idiomas, y cuido la comunicación tanto como el código.",
       skillGroups: {
         programming: "Programación",
         web: "Web y datos",
@@ -224,23 +227,26 @@ export const translations = {
       },
     },
     spotlight: {
-      line: "Fluido en cinco idiomas. Cómodo en cualquier código.",
+      line: "Cinco idiomas. Un objetivo: software que cumple su función.",
     },
     projects: {
-      title: "Proyectos",
-      noRepos: "No se encontraron repositorios marcados como favoritos.",
-      githubButton: "Github",
-      viewProjectButton: "Ver proyecto",
-      noDescription: "Sin descripción disponible",
+      title: "Trabajos destacados",
+      noRepos: "Próximamente.",
+      githubButton: "Código fuente",
+      viewProjectButton: "Ver web en vivo",
+      noDescription: "Sin descripción todavía.",
     },
     contact: {
-      title: "Ponte en contacto",
+      title: "Trabajemos juntos",
       description:
-        "Siempre estoy abierto a discutir nuevos proyectos, ideas creativas u oportunidades para dar vida a tu visión. ¡No dudes en contactarme!",
-      emailButton: "Envíame un email",
+        "¿Buscas un desarrollador para tu equipo, o necesitas una web, una aplicación o una automatización? Cuéntame qué tienes en mente y te respondo.",
+      emailButton: "Escríbeme",
       emailCopied: "Email copiado al portapapeles",
       linkedinButton: "Conecta en LinkedIn",
-      location: "Con base en Barcelona, España",
+      location: "En Barcelona · Disponible en remoto",
+    },
+    theme: {
+      toggle: "Cambiar modo oscuro",
     },
     footer: {
       copyright: "Alexandre Arabian.",
@@ -319,6 +325,9 @@ type TranslationStructure = {
     emailCopied: string;
     linkedinButton: string;
     location: string;
+  };
+  theme: {
+    toggle: string;
   };
   footer: {
     copyright: string;
