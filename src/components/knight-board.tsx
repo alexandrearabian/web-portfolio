@@ -111,6 +111,8 @@ export function KnightBoard({
   const coverRef = useRef<HTMLDivElement>(null);
   const busy = useRef(false);
   const active = useRef(0);
+  // How far the scroll has taken the move (0..1), for clicks mid-scroll.
+  const progress = useRef(0);
   // Whether the current history entry is a section we pushed on top of
   // the board's entry (so leaving can pop it instead of adding another).
   const pushed = useRef(false);
@@ -283,6 +285,7 @@ export function KnightBoard({
       // before the square starts shrinking, instead of at the first nudge.
       const hold = pinned.offsetHeight * 0.4;
       const p = length > hold ? clamp(scrollY / (length - hold)) : 0;
+      progress.current = p;
       if (!busy.current) {
         // Back on the board: scrolling down leads to About again.
         if (p === 0 && active.current !== 0)
@@ -333,17 +336,30 @@ export function KnightBoard({
   }, [paint, onBoardChange, onActiveChange, arrive, leave]);
 
   // A click or a drop: the same frames, played over time, then straight
-  // to the section (whose background the square has just become).
+  // to the section (whose background the square has just become). Works
+  // mid-scroll too: heading for the same square, the move carries on from
+  // where the scroll left it; for another square, the knight first hops
+  // back to the centre, so nothing snaps.
   const move = useCallback(
     async (i: number, from = 0) => {
-      if (busy.current || scrollY > 0) return;
+      if (busy.current) return;
       busy.current = true;
       setSelected(false);
-      // Swap the section in now; it renders hidden while the move plays.
-      onActiveChange((active.current = i));
       const root = document.documentElement;
       root.style.overflow = "hidden";
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const now = progress.current;
+      if (now > 0 && from === 0) {
+        if (i === active.current) from = now;
+        else
+          await animate(now, 0, {
+            duration: reduce ? 0 : now * 0.5,
+            ease: "linear",
+            onUpdate: (t) => paint(active.current, t),
+          });
+      }
+      // Swap the section in now; it renders hidden while the move plays.
+      onActiveChange((active.current = i));
       await animate(from, 1, {
         duration: reduce ? 0 : (1 - from) * 0.95,
         ease: "linear",
