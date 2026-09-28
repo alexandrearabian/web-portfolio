@@ -2,21 +2,16 @@ import "~/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "~/contexts/LanguageContext";
 import { type Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { Navbar } from "~/components/navbar";
-import { Footer } from "~/components/footer";
-
-// Runs before first paint so a saved dark theme never flashes light.
-const themeScript = `try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){}`;
 
 export const metadata: Metadata = {
-  title: "Alexandre Arabian · Fullstack developer in Barcelona",
+  title: "Alexandre Arabian · Software Engineer in Barcelona",
   description:
-    "Fullstack developer in Barcelona, open to full-time roles and freelance projects: web apps, e-commerce and process automation.",
+    "Software engineer in Barcelona building web apps end to end. Experience, projects and CV.",
   openGraph: {
     title: "Alexandre Arabian",
-    description:
-      "Fullstack developer open to full-time roles and freelance projects.",
+    description: "Software engineer in Barcelona. Experience, projects and CV.",
     type: "website",
   },
 };
@@ -31,22 +26,25 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${geistMono.variable}`}
-      suppressHydrationWarning
+      className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
-      <body className="overflow-x-hidden font-sans" suppressHydrationWarning>
+      <body className="overflow-x-hidden" suppressHydrationWarning>
         <a
           href="#main"
-          className="bg-foreground text-background sr-only z-[60] rounded-full px-4 py-2 text-sm focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
+          className="bg-foreground text-background sr-only z-[60] px-4 py-2 text-sm focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
         >
           Skip to content
         </a>
@@ -54,7 +52,6 @@ export default function RootLayout({
           <ThemeProvider>
             <Navbar />
             <main id="main">{children}</main>
-            <Footer />
           </ThemeProvider>
         </LanguageProvider>
       </body>

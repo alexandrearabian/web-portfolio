@@ -10,6 +10,7 @@ const repoSchema = z.object({
   homepage: z.string().nullable().optional(),
   language: z.string().nullable().optional(),
   stargazers_count: z.number().optional(),
+  topics: z.array(z.string()).optional(),
   owner: z.object({ login: z.string() }),
 });
 
@@ -20,8 +21,39 @@ export type Repo = z.infer<typeof repoSchema> & {
   homepage?: string | null;
   language: string | null;
   stargazers_count?: number;
+  topics: string[];
   private: boolean;
+  // The image the repo's website shows when its link is shared.
+  preview: string | null;
 };
+
+// Reads og:image (or twitter:image) from a page, the way messaging apps
+// build a link preview. Cached for a day; any failure just means no image.
+async function sharePreview(site: string): Promise<string | null> {
+  try {
+    const res = await fetch(site, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; web-portfolio)" },
+      next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const html = (await res.text()).slice(0, 300_000);
+    for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
+      if (
+        !/(?:property|name)=["'](?:og:image|twitter:image)(?::url)?["']/i.test(
+          tag,
+        )
+      )
+        continue;
+      const content = /content=["']([^"']+)["']/i.exec(tag)?.[1];
+      if (!content) continue;
+      const url = new URL(content.replaceAll("&amp;", "&"), res.url);
+      if (url.protocol === "https:" || url.protocol === "http:")
+        return url.href;
+    }
+  } catch {}
+  return null;
+}
 
 export async function getRepos(): Promise<Repo[]> {
   try {
@@ -71,13 +103,21 @@ export async function getRepos(): Promise<Repo[]> {
           description: repo.description ?? null,
           homepage: repo.homepage ?? null,
           language: repo.language ?? null,
+          topics: repo.topics ?? [],
+          preview: null,
         });
       }
     }
 
     // Only public repos I own; stars on other people's projects are skipped.
-    return all.filter(
+    const owned = all.filter(
       (r) => !r.private && r.owner.login === "alexandrearabian",
+    );
+    return await Promise.all(
+      owned.map(async (r) => ({
+        ...r,
+        preview: r.homepage ? await sharePreview(r.homepage) : null,
+      })),
     );
   } catch {
     return [];
