@@ -1,15 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowUpRight, Check, Download } from "lucide-react";
+import { ArrowUpRight, Check, Copy, Download, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useMemo, useState } from "react";
 import { useLanguage } from "~/contexts/LanguageContext";
 import { cn } from "~/lib/utils";
 import type { Role, TranslationKeys } from "~/lib/translations";
 import { ChessPiece, type PieceType } from "~/components/chess-piece";
-import { PawnRail } from "~/components/pawn-rail";
 import { KnightBoard, type BoardSection } from "~/components/knight-board";
+import { ChessPuzzle } from "~/components/chess-puzzle";
+import {
+  EnvelopeClosedIcon,
+  GitHubLogoIcon,
+  GlobeIcon,
+  LinkedInLogoIcon,
+} from "@radix-ui/react-icons";
 import type { Repo } from "./actions/getRepos";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -34,16 +40,23 @@ const SKILLS = {
   cloud: ["AWS", "Google Cloud", "Azure", "Docker", "Git", "GitHub"],
 } as const;
 
-// Page order, the piece beside each heading (and on its board square),
-// and the square colour each section sits on.
+// Screenshots of the live sites, preferred over the sites' own share
+// images and GitHub's generated card.
+const SHOTS: Record<string, string> = {
+  "mar-jabones": "/projects/mar-jabones.png",
+  ayan: "/projects/ayan.png",
+  flaminhotboi: "/projects/flaminhotboi.png",
+  tadron: "/projects/tadron.png",
+};
+
+// Page order, and the piece beside each heading (and on its board square).
 const SECTIONS: readonly BoardSection[] = [
-  { id: "about", piece: "knight", tone: "dark" },
-  { id: "experience", piece: "bishop", tone: "dark" },
-  { id: "projects", piece: "rook", tone: "light" },
-  { id: "contact", piece: "queen", tone: "light" },
+  { id: "about", piece: "knight" },
+  { id: "experience", piece: "bishop" },
+  { id: "projects", piece: "rook" },
+  { id: "contact", piece: "queen" },
+  { id: "puzzle", piece: "pawn" },
 ];
-const tone = (id: BoardSection["id"]) =>
-  SECTIONS.find((s) => s.id === id)!.tone;
 
 // Letters rise out of a clipped line, one after another.
 function RevealText({
@@ -76,80 +89,59 @@ function RevealText({
   );
 }
 
-// Each section is a full-width band in its square's colour; the content
-// rises from below as one block when it scrolls in.
-//
-// The first section is different: it overlaps the board's last screen of
-// runway, hidden, and shows the moment the growing square has filled the
-// screen (`revealed`), rising in on top of it. Its content remounts on
-// each reveal so the rise (and the heading's drop) play every time.
+// A section is a room: only one is on the page at a time, below the
+// board's runway. It overlaps the runway's last screen, hidden, and shows
+// the moment the growing square has filled the screen (`revealed`),
+// rising in on top of it. At least a screen tall so
+// the runway can always be scrolled to its end. The content remounts on
+// each reveal so the rise plays every time.
 function Section({
   id,
-  className,
   revealed,
-  seam = false,
+  footer,
+  className,
   children,
 }: {
   id: BoardSection["id"];
+  revealed: boolean;
+  footer?: React.ReactNode;
   className?: string;
-  revealed?: boolean;
-  // A hairline at the top, for a section that follows one of its colour.
-  seam?: boolean;
   children: React.ReactNode;
 }) {
-  const first = revealed !== undefined;
-  const rise = { opacity: 1, y: 0 };
   return (
     <section
       id={id}
-      data-tone={tone(id)}
       className={cn(
-        `tone-${tone(id)}`,
-        first && "relative z-10 -mt-[100svh]",
-        revealed === false && "invisible",
+        "bg-background relative z-10 -mt-[100svh] flex min-h-[100svh] flex-col",
+        !revealed && "invisible",
       )}
     >
-      {seam && (
-        <div className="shell">
-          <div className="border-border border-t" />
-        </div>
-      )}
       <motion.div
         key={String(revealed)}
-        className={cn(
-          "shell pb-28 md:pb-36",
-          // The first section starts well down the screen, so it reads as
-          // arriving rather than scrolling straight past.
-          first ? "pt-[34svh]" : "pt-28 md:pt-36",
-          className,
-        )}
+        // Starts well down the screen, so it reads as arriving.
+        className={cn("shell flex-1 pt-[34svh] pb-28 md:pb-36", className)}
         initial={{ opacity: 0, y: 48 }}
-        {...(first
-          ? { animate: rise }
-          : { whileInView: rise, viewport: { once: true, amount: 0.1 } })}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, ease: EASE }}
       >
         {children}
       </motion.div>
+      {footer}
     </section>
   );
 }
 
 // A section heading: its piece and title in the display serif, an
 // optional intro under it, and a hairline closing the header off from the
-// content. `slot` keeps the piece's place but leaves it empty: the last
-// section's queen is the pawn rail's, which promotes and flies in
-// (pawn-rail.tsx).
+// content.
 function Heading({
   piece,
   title,
   intro,
-  slot = false,
 }: {
   piece: PieceType;
   title: string;
   intro?: string;
-  slot?: boolean;
 }) {
   return (
     <motion.header
@@ -162,10 +154,7 @@ function Heading({
       <h2 className="font-display flex items-end gap-[0.22em] text-[3.25rem] leading-[0.95] sm:text-7xl lg:text-[5.5rem]">
         <ChessPiece
           type={piece}
-          className={cn(
-            "-mb-[0.06em] size-[0.86em] shrink-0",
-            slot && "invisible",
-          )}
+          className="-mb-[0.06em] size-[0.86em] shrink-0"
         />
         {title}
       </h2>
@@ -304,7 +293,10 @@ function ProjectList({
                   src={project.image}
                   alt=""
                   fill
-                  unoptimized
+                  // Our own screenshots go through the optimiser; remote
+                  // share images are shown as they are.
+                  unoptimized={!project.image.startsWith("/")}
+                  sizes="(min-width: 768px) 27rem, 100vw"
                   className="object-cover"
                 />
               </div>
@@ -322,8 +314,9 @@ function ProjectList({
                     href={project.site}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-accent inline-flex items-center gap-1 underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
+                    className="hover:text-accent inline-flex items-center gap-1.5 underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
                   >
+                    <GlobeIcon className="size-4" />
                     {labels.live}
                     <ArrowUpRight className="size-4" />
                   </a>
@@ -332,8 +325,9 @@ function ProjectList({
                   href={project.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-accent inline-flex items-center gap-1 underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
+                  className="hover:text-accent inline-flex items-center gap-1.5 underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
                 >
+                  <GitHubLogoIcon className="size-4" />
                   {labels.code}
                   <ArrowUpRight className="size-4" />
                 </a>
@@ -353,7 +347,10 @@ function ProjectList({
                 src={project.image}
                 alt=""
                 fill
-                unoptimized
+                // Our own screenshots go through the optimiser; remote
+                // share images are shown as they are.
+                unoptimized={!project.image.startsWith("/")}
+                sizes="(min-width: 768px) 27rem, 100vw"
                 className={cn(
                   "object-cover transition-opacity duration-500",
                   i === active ? "opacity-100" : "opacity-0",
@@ -380,6 +377,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
   const { t, language } = useLanguage();
   const [emailCopied, setEmailCopied] = useState(false);
   const [onBoard, setOnBoard] = useState(true);
+  const [active, setActive] = useState(0);
   const cvHref = language === "es" ? "/spanish-cv.pdf" : "/english-cv.pdf";
   const cvName =
     language === "es"
@@ -420,19 +418,307 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
         site: repo.homepage || null,
         github: repo.html_url,
         image:
+          SHOTS[repo.name] ??
           repo.preview ??
           `https://opengraph.githubassets.com/1/${repo.owner.login}/${repo.name}`,
       })),
     [repos, t],
   );
 
+  const rooms: Record<BoardSection["id"], React.ReactNode> = {
+    // The pitch in the display serif; key facts in three columns under
+    // it; then the stack, set like a menu card.
+    about: (
+      <>
+        <Heading piece="knight" title={t.about.title} />
+        <p className="font-display max-w-[32ch] text-[1.85rem] leading-[1.2] sm:text-[2.35rem] lg:text-[2.75rem]">
+          {t.about.lead}
+        </p>
+
+        <dl className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-14">
+          {[
+            { label: t.about.based, value: t.about.basedValue },
+            {
+              label: t.experience.education.title,
+              value: t.about.educationValue,
+            },
+          ].map((fact) => (
+            <div key={fact.label} className="border-border border-t pt-5">
+              <dt className="text-muted-foreground text-sm">{fact.label}</dt>
+              <dd className="font-display mt-2 text-2xl leading-snug">
+                {fact.value}
+              </dd>
+            </div>
+          ))}
+          <div className="border-border border-t pt-5 sm:col-span-2 lg:col-span-1">
+            <dt className="text-muted-foreground text-sm">
+              {t.about.languagesTitle}
+            </dt>
+            <dd>
+              <ul className="mt-2 space-y-1.5">
+                {t.about.languages.map((item) => (
+                  <li
+                    key={item.name}
+                    className="flex items-baseline justify-between gap-4"
+                  >
+                    <span className="font-display text-2xl">{item.name}</span>
+                    <span className="text-muted-foreground text-sm">
+                      {t.about.levels[item.level]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </dd>
+          </div>
+        </dl>
+
+        <div className="mt-20">
+          <h3 className="font-display text-3xl italic">{t.about.skills}</h3>
+          {/* Two columns even on a phone: four short lists read better
+              side by side than as one long column. */}
+          <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4 lg:gap-14">
+            {skillGroups.map((group) => (
+              <div key={group.key} className="border-border border-t pt-5">
+                <dt className="text-sm font-medium">{group.label}</dt>
+                <dd>
+                  <ul className="text-muted-foreground mt-3 space-y-1 text-[15px] sm:space-y-1.5 sm:text-base">
+                    {group.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </>
+    ),
+    experience: (
+      <>
+        <Heading piece="bishop" title={t.experience.title} />
+        <ol>
+          {t.experience.roles.map((item, i) => (
+            <RoleRow
+              key={item.company + item.period}
+              item={item}
+              move={i + 1}
+            />
+          ))}
+        </ol>
+
+        <div className="border-border mt-12 grid gap-8 border-t pt-12 md:grid-cols-[14rem_1fr] md:gap-14">
+          <h3 className="font-display text-3xl italic">
+            {t.experience.education.title}
+          </h3>
+          <ul className="grid gap-10 sm:grid-cols-2">
+            {t.experience.education.items.map((item) => (
+              <li key={item.school}>
+                <p className="font-display text-2xl leading-snug">
+                  {item.degree}
+                </p>
+                <p className="mt-2">{item.school}</p>
+                <p className="text-muted-foreground mt-1 text-sm tabular-nums">
+                  {item.period}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </>
+    ),
+    projects: (
+      <>
+        <Heading
+          piece="rook"
+          title={t.projects.title}
+          intro={t.projects.intro}
+        />
+        {projects.length > 0 ? (
+          <ProjectList projects={projects} labels={t.projects} />
+        ) : (
+          <p className="text-muted-foreground text-lg">{t.projects.noRepos}</p>
+        )}
+      </>
+    ),
+    contact: (
+      <>
+        <Heading piece="queen" title={t.contact.title} />
+        {/* The pitch and the two things a recruiter wants (write, or take
+            the CV) on the left; every channel on a card on the right. */}
+        <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-6">
+            <p className="max-w-[42ch] text-xl leading-relaxed">
+              {t.contact.body}
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <a
+                href={`mailto:${EMAIL}`}
+                onClick={handleEmailClick}
+                className="bg-foreground text-background hover:bg-accent inline-flex h-12 items-center gap-2.5 rounded-full px-6 text-sm font-medium transition-colors active:scale-[0.98]"
+              >
+                <Mail className="size-4" />
+                {t.hero.email}
+              </a>
+              <a
+                href={cvHref}
+                download={cvName}
+                className="border-foreground/20 hover:border-foreground inline-flex h-12 items-center gap-2.5 rounded-full border px-6 text-sm font-medium transition-colors active:scale-[0.98]"
+              >
+                <Download className="size-4" />
+                {t.contact.cv}
+              </a>
+            </div>
+            <p className="text-muted-foreground mt-8">{t.contact.location}</p>
+          </div>
+
+          <ul className="bg-card border-border divide-border divide-y self-start rounded-md border lg:col-span-6">
+            <li className="flex items-center gap-4 px-5 py-5 sm:px-7">
+              <span className="border-border bg-background grid size-10 shrink-0 place-items-center rounded-full border">
+                <EnvelopeClosedIcon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-sm">
+                  {t.contact.emailLabel}
+                </p>
+                <a
+                  href={`mailto:${EMAIL}`}
+                  onClick={handleEmailClick}
+                  className="font-display hover:text-accent mt-1 block truncate text-xl transition-colors sm:text-2xl"
+                >
+                  {EMAIL}
+                </a>
+              </div>
+              <button
+                type="button"
+                onClick={handleEmailClick}
+                aria-label={t.contact.copy}
+                title={t.contact.copy}
+                className="text-muted-foreground hover:text-foreground border-border grid size-10 shrink-0 place-items-center rounded-full border transition-colors"
+              >
+                {emailCopied ? (
+                  <Check className="text-accent size-4" />
+                ) : (
+                  <Copy className="size-4" />
+                )}
+              </button>
+            </li>
+            {[
+              {
+                label: t.contact.linkedin,
+                value: "in/alexandre-arabian-jensezian",
+                href: LINKEDIN_URL,
+                Icon: LinkedInLogoIcon,
+              },
+              {
+                label: t.contact.github,
+                value: "github.com/alexandrearabian",
+                href: GITHUB_URL,
+                Icon: GitHubLogoIcon,
+              },
+            ].map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-4 px-5 py-5 sm:px-7"
+                >
+                  <span className="border-border bg-background grid size-10 shrink-0 place-items-center rounded-full border">
+                    <link.Icon className="size-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="text-muted-foreground block text-sm">
+                      {link.label}
+                    </span>
+                    <span className="font-display group-hover:text-accent mt-1 block truncate text-xl transition-colors sm:text-2xl">
+                      {link.value}
+                    </span>
+                  </span>
+                  <ArrowUpRight className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="border-border text-muted-foreground mt-24 border-t pt-6 text-xs">
+          {t.contact.credit}
+        </p>
+      </>
+    ),
+    puzzle: (
+      <>
+        <Heading piece="pawn" title={t.nav.puzzle} intro={t.puzzle.intro} />
+        <ChessPuzzle />
+      </>
+    ),
+  };
+  const room = SECTIONS[active]!.id;
+
+  // Ends every room but Contact: a way to reach me wherever you are.
+  const footer = (
+    <footer className="border-border border-t">
+      <div className="shell flex flex-col gap-8 py-12 md:flex-row md:items-end md:justify-between md:py-14">
+        <div>
+          <p className="font-display text-3xl leading-tight sm:text-4xl">
+            {t.footer.title}
+          </p>
+          <a
+            href={`mailto:${EMAIL}`}
+            onClick={handleEmailClick}
+            className="hover:text-accent mt-3 inline-flex items-center gap-2 text-lg underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
+          >
+            <EnvelopeClosedIcon className="size-4 shrink-0" />
+            {EMAIL}
+          </a>
+        </div>
+        <ul className="flex flex-wrap gap-x-7 gap-y-3 text-sm font-medium">
+          {[
+            {
+              href: LINKEDIN_URL,
+              label: t.contact.linkedin,
+              Icon: LinkedInLogoIcon,
+            },
+            { href: GITHUB_URL, label: t.contact.github, Icon: GitHubLogoIcon },
+          ].map((link) => (
+            <li key={link.href}>
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-accent inline-flex items-center gap-1.5 transition-colors"
+              >
+                <link.Icon className="size-4" />
+                {link.label}
+                <ArrowUpRight className="size-4" />
+              </a>
+            </li>
+          ))}
+          <li>
+            <a
+              href={cvHref}
+              download={cvName}
+              className="hover:text-accent inline-flex items-center gap-1.5 transition-colors"
+            >
+              <Download className="size-4" />
+              {t.contact.cv}
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div className="shell text-muted-foreground border-border flex flex-col gap-1 border-t py-5 text-xs sm:flex-row sm:justify-between">
+        <p>© {new Date().getFullYear()} Alexandre Arabian</p>
+        <p>{t.contact.credit}</p>
+      </div>
+    </footer>
+  );
+
   return (
     <>
-      <PawnRail hidden={onBoard} startId="about" finalId="contact" />
-
       <KnightBoard
         sections={SECTIONS}
         onBoardChange={setOnBoard}
+        onActiveChange={setActive}
         intro={
           <>
             <h1
@@ -491,175 +777,16 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
         }
       />
 
-      {/* The pitch in the display serif; key facts in three columns under
-          it; then the stack, set like a menu card. */}
-      <Section id="about" revealed={!onBoard}>
-        <Heading piece="knight" title={t.about.title} />
-        <p className="font-display max-w-[30ch] text-[2rem] leading-[1.18] sm:text-[2.6rem] lg:text-5xl">
-          {t.about.lead}
-        </p>
-
-        <dl className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-14">
-          {[
-            { label: t.about.based, value: t.about.basedValue },
-            {
-              label: t.experience.education.title,
-              value: t.about.educationValue,
-            },
-          ].map((fact) => (
-            <div key={fact.label} className="border-border border-t pt-5">
-              <dt className="text-muted-foreground text-sm">{fact.label}</dt>
-              <dd className="font-display mt-2 text-2xl leading-snug">
-                {fact.value}
-              </dd>
-            </div>
-          ))}
-          <div className="border-border border-t pt-5 sm:col-span-2 lg:col-span-1">
-            <dt className="text-muted-foreground text-sm">
-              {t.about.languagesTitle}
-            </dt>
-            <dd>
-              <ul className="mt-2 space-y-1.5">
-                {t.about.languages.map((item) => (
-                  <li
-                    key={item.name}
-                    className="flex items-baseline justify-between gap-4"
-                  >
-                    <span className="font-display text-2xl">{item.name}</span>
-                    <span className="text-muted-foreground text-sm">
-                      {t.about.levels[item.level]}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </dd>
-          </div>
-        </dl>
-
-        <div className="mt-20">
-          <h3 className="font-display text-3xl italic">{t.about.skills}</h3>
-          <dl className="mt-8 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-14">
-            {skillGroups.map((group) => (
-              <div key={group.key} className="border-border border-t pt-5">
-                <dt className="text-sm font-medium">{group.label}</dt>
-                <dd>
-                  <ul className="text-muted-foreground mt-3 space-y-1.5">
-                    {group.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </Section>
-
-      <Section id="experience" seam>
-        <Heading piece="bishop" title={t.experience.title} />
-        <ol>
-          {t.experience.roles.map((item, i) => (
-            <RoleRow
-              key={item.company + item.period}
-              item={item}
-              move={i + 1}
-            />
-          ))}
-        </ol>
-
-        <div className="border-border mt-12 grid gap-8 border-t pt-12 md:grid-cols-[14rem_1fr] md:gap-14">
-          <h3 className="font-display text-3xl italic">
-            {t.experience.education.title}
-          </h3>
-          <ul className="grid gap-10 sm:grid-cols-2">
-            {t.experience.education.items.map((item) => (
-              <li key={item.school}>
-                <p className="font-display text-2xl leading-snug">
-                  {item.degree}
-                </p>
-                <p className="mt-2">{item.school}</p>
-                <p className="text-muted-foreground mt-1 text-sm tabular-nums">
-                  {item.period}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </Section>
-
-      <Section id="projects">
-        <Heading
-          piece="rook"
-          title={t.projects.title}
-          intro={t.projects.intro}
-        />
-        {projects.length > 0 ? (
-          <ProjectList projects={projects} labels={t.projects} />
-        ) : (
-          <p className="text-muted-foreground text-lg">{t.projects.noRepos}</p>
-        )}
-      </Section>
-
-      <Section id="contact" seam className="pb-16 md:pb-20">
-        <Heading piece="queen" title={t.contact.title} slot />
-        <p className="max-w-[46ch] text-xl leading-relaxed">{t.contact.body}</p>
-
-        {/* A contact sheet: each way to reach me, as one full row. */}
-        <ul className="mt-14 grid gap-x-14 md:grid-cols-2">
-          {[
-            {
-              label: t.contact.emailLabel,
-              value: EMAIL,
-              href: `mailto:${EMAIL}`,
-              onClick: handleEmailClick,
-            },
-            {
-              label: t.contact.linkedin,
-              value: "in/alexandre-arabian-jensezian",
-              href: LINKEDIN_URL,
-            },
-            {
-              label: t.contact.github,
-              value: "github.com/alexandrearabian",
-              href: GITHUB_URL,
-            },
-            {
-              label: "CV",
-              value: t.contact.cv,
-              href: cvHref,
-              download: cvName,
-            },
-          ].map((link) => (
-            <li key={link.label} className="border-border border-b">
-              <a
-                href={link.href}
-                target={link.download ? undefined : "_blank"}
-                rel="noopener noreferrer"
-                download={link.download}
-                onClick={link.onClick}
-                className="group flex items-end justify-between gap-6 py-7"
-              >
-                <span className="min-w-0">
-                  <span className="text-muted-foreground block text-sm">
-                    {link.label}
-                  </span>
-                  <span className="font-display group-hover:text-accent mt-2 block truncate text-2xl transition-colors sm:text-3xl">
-                    {link.value}
-                  </span>
-                </span>
-                {link.download ? (
-                  <Download className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-y-0.5" />
-                ) : (
-                  <ArrowUpRight className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                )}
-              </a>
-            </li>
-          ))}
-        </ul>
-        <div className="border-border text-muted-foreground mt-24 flex flex-col gap-2 border-t pt-6 text-sm sm:flex-row sm:justify-between">
-          <p>{t.contact.location}</p>
-          <p className="text-xs sm:text-sm">{t.contact.credit}</p>
-        </div>
+      <Section
+        key={room}
+        id={room}
+        revealed={!onBoard}
+        // Contact is itself the contact sheet; every other room ends with
+        // the footer.
+        footer={room !== "contact" && footer}
+        className={room === "contact" ? "pb-16 md:pb-20" : undefined}
+      >
+        {rooms[room]}
       </Section>
       {/* Toast: confirms the address was copied to the clipboard */}
       <div

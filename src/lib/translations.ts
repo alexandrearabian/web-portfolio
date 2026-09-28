@@ -6,6 +6,17 @@ export const translations = {
       experience: "Experience",
       projects: "Work",
       contact: "Contact",
+      puzzle: "Puzzle",
+    },
+    puzzle: {
+      intro:
+        "A short chess break. Find the smothered mate: a king trapped by its own pieces.",
+      prompt: "White to move. Mate in 2.",
+      wrong: "Not quite. Try another move.",
+      forced: "Black's only move. Now finish it.",
+      solved: "Checkmate. Smothered by its own pieces.",
+      reset: "Reset",
+      solution: "Show solution",
     },
     hero: {
       role: "Software Engineer in Barcelona",
@@ -17,7 +28,7 @@ export const translations = {
     },
     about: {
       title: "About",
-      lead: "As the only developer on a team, I took a platform from an empty repository to production. At a meat processing plant, I wrote the tool that cut certificate paperwork by 95%.",
+      lead: "Computer engineer who loves technology and solving problems. Living in different countries and working in five languages has made me flexible and collaborative, and I keep looking for new challenges where I can contribute and grow.",
       skills: "Stack",
       based: "Based in",
       basedValue: "Barcelona, Spain (open to remote)",
@@ -126,6 +137,7 @@ export const translations = {
       body: "Hiring for a developer role, or need a site, web app or automation built? Send me a few lines about it and I'll get back to you.",
       emailLabel: "Email",
       copied: "Email copied to clipboard",
+      copy: "Copy email",
       linkedin: "LinkedIn",
       github: "GitHub",
       cv: "Download CV",
@@ -133,8 +145,13 @@ export const translations = {
       credit: "Chess pieces: cburnett by Colin M.L. Burnett, CC BY-SA 3.0",
     },
     rail: {
-      label: "Reading progress",
       jump: "Jump to",
+    },
+    theme: {
+      toggle: "Toggle dark mode",
+    },
+    footer: {
+      title: "Open to new roles. Let's talk.",
     },
     language: {
       toggle: "Change language",
@@ -155,6 +172,17 @@ export const translations = {
       experience: "Experiencia",
       projects: "Proyectos",
       contact: "Contacto",
+      puzzle: "Problema",
+    },
+    puzzle: {
+      intro:
+        "Una pausa de ajedrez. Encuentra el mate de la coz: un rey atrapado por sus propias piezas.",
+      prompt: "Juegan blancas. Mate en 2.",
+      wrong: "Casi. Prueba otra jugada.",
+      forced: "La única jugada de las negras. Ahora remata.",
+      solved: "Jaque mate. Ahogado por sus propias piezas.",
+      reset: "Reiniciar",
+      solution: "Ver solución",
     },
     hero: {
       role: "Ingeniero Informático en Barcelona",
@@ -166,7 +194,7 @@ export const translations = {
     },
     about: {
       title: "Sobre mí",
-      lead: "Como único desarrollador de un equipo, llevé una plataforma de un repositorio vacío a producción. En un frigorífico, escribí la herramienta que redujo un 95% el tiempo de gestión de certificados.",
+      lead: "Ingeniero Informático apasionado por la tecnología y la resolución de problemas. Haber vivido en distintos países y trabajar en varios idiomas me ha dado una mirada flexible y colaborativa, y sigo buscando nuevos retos donde aportar y crecer.",
       skills: "Tecnologías",
       based: "Ubicación",
       basedValue: "Barcelona, España (disponible en remoto)",
@@ -277,6 +305,7 @@ export const translations = {
       body: "¿Buscas un desarrollador para tu equipo, o necesitas una web, una aplicación o una automatización? Escríbeme unas líneas y te respondo.",
       emailLabel: "Email",
       copied: "Email copiado al portapapeles",
+      copy: "Copiar email",
       linkedin: "LinkedIn",
       github: "GitHub",
       cv: "Descargar CV",
@@ -285,8 +314,13 @@ export const translations = {
         "Piezas de ajedrez: cburnett, de Colin M.L. Burnett, CC BY-SA 3.0",
     },
     rail: {
-      label: "Progreso de lectura",
       jump: "Ir a",
+    },
+    theme: {
+      toggle: "Cambiar modo oscuro",
+    },
+    footer: {
+      title: "Abierto a nuevos retos. Hablemos.",
     },
     language: {
       toggle: "Cambiar idioma",
@@ -322,6 +356,16 @@ type TranslationStructure = {
     experience: string;
     projects: string;
     contact: string;
+    puzzle: string;
+  };
+  puzzle: {
+    intro: string;
+    prompt: string;
+    wrong: string;
+    forced: string;
+    solved: string;
+    reset: string;
+    solution: string;
   };
   hero: {
     role: string;
@@ -365,13 +409,16 @@ type TranslationStructure = {
     body: string;
     emailLabel: string;
     copied: string;
+    copy: string;
     linkedin: string;
     github: string;
     cv: string;
     location: string;
     credit: string;
   };
-  rail: { label: string; jump: string };
+  rail: { jump: string };
+  theme: { toggle: string };
+  footer: { title: string };
   language: { toggle: string; english: string; spanish: string };
   notFound: {
     eyebrow: string;

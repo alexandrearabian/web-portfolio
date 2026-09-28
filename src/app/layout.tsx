@@ -3,7 +3,12 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "~/contexts/LanguageContext";
 import { type Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import Script from "next/script";
 import { Navbar } from "~/components/navbar";
+
+// Runs before first paint so a saved dark theme never flashes light.
+// Light is the default; only an explicit choice switches.
+const themeScript = `try{document.documentElement.dataset.theme=localStorage.getItem("theme")||"light"}catch(e){}`;
 
 export const metadata: Metadata = {
   title: "Alexandre Arabian · Software Engineer in Barcelona",
@@ -40,7 +45,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
+      // The theme script sets data-theme before React hydrates.
+      suppressHydrationWarning
     >
+      <head>
+        <Script id="theme" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
+      </head>
       <body className="overflow-x-hidden" suppressHydrationWarning>
         <a
           href="#main"

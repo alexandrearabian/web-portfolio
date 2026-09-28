@@ -8,26 +8,24 @@ import { cn } from "~/lib/utils";
 import { ChessPiece, type PieceType } from "./chess-piece";
 
 export type BoardSection = {
-  id: "about" | "experience" | "projects" | "contact";
+  id: "about" | "experience" | "projects" | "contact" | "puzzle";
   piece: PieceType;
-  // Which square colour the section sits on. Every section square on the
-  // board is dark (a knight from the centre always lands on the other
-  // colour), so the square turns light while it grows for "light" ones.
-  tone: "dark" | "light";
 };
 
 type Spot = { col: number; row: number };
 type Point = readonly [number, number];
 
 const CENTRE: Spot = { col: 2, row: 2 };
-// A pinwheel of knight moves from the centre, one per side of the board:
-// top, right, bottom, left.
-const SPOTS: Spot[] = [
-  { col: 1, row: 0 },
-  { col: 4, row: 1 },
-  { col: 3, row: 4 },
-  { col: 0, row: 3 },
-];
+// Each section's square: all knight moves from the centre. About on top,
+// Experience and the puzzle on the right, Contact at the bottom, Work on
+// the left.
+const SPOT: Record<BoardSection["id"], Spot> = {
+  about: { col: 1, row: 0 },
+  experience: { col: 4, row: 1 },
+  puzzle: { col: 4, row: 3 },
+  contact: { col: 3, row: 4 },
+  projects: { col: 0, row: 3 },
+};
 const TILT = 50; // how far the board leans back
 // Undoes the board's rotation, so a child stands up facing the viewer.
 const FACE_VIEWER = `translateZ(1px) rotateX(-${TILT}deg)`;
@@ -63,11 +61,13 @@ function Corners() {
   The opening screen: a 5×5 board seen at an angle, a knight in the
   middle and a section on each of four squares it can reach. The screen
   is pinned while you scroll through 60svh of "runway", and the
-  scroll position *is* the animation: the knight jumps to About and the
-  square grows until it fills the screen as About's background. Stop
-  halfway and it stays halfway; scroll up and it plays backwards.
-  Clicking a square (or dropping the knight on one) plays the same
-  frames over time, then lands on that section. The knight doesn't just
+  scroll position *is* the animation: the knight jumps to the active
+  section's square and the square grows until it fills the screen as that
+  section's background. Stop halfway and it stays halfway; scroll up and
+  it plays backwards. Only one section is on the page at a time: About by
+  default, or whichever square was clicked (or had the knight dropped on
+  it), which plays the same frames over time and lands there. Back on the
+  board, the active section resets to About. The knight doesn't just
   land: it drops into the square, as if through a trapdoor, and the
   square opens out from there.
 
@@ -78,11 +78,14 @@ function Corners() {
 export function KnightBoard({
   sections,
   onBoardChange,
+  onActiveChange,
   intro,
   actions,
 }: {
   sections: readonly BoardSection[];
   onBoardChange: (onBoard: boolean) => void;
+  // The section on the page below the board (an index into `sections`).
+  onActiveChange: (i: number) => void;
   intro: React.ReactNode;
   actions: React.ReactNode;
 }) {
@@ -103,6 +106,11 @@ export function KnightBoard({
   const moveDotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const coverRef = useRef<HTMLDivElement>(null);
   const busy = useRef(false);
+  const active = useRef(0);
+  // Whether the current history entry is a section we pushed on top of
+  // the board's entry (so leaving can pop it instead of adding another).
+  const pushed = useRef(false);
+  const started = useRef(false);
   const dragFrom = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
 
@@ -117,7 +125,7 @@ export function KnightBoard({
       const target = spotRefs.current[i];
       if (!scene || !grid || !cover || !target || !centreRef.current) return;
       const sq = grid.offsetWidth / 5;
-      const spot = SPOTS[i]!;
+      const spot = SPOT[sections[i]!.id];
       const hop = clamp(t / HOP);
       const sink = clamp((t - HOP) / SINK) ** 2;
       const grow = clamp((t - HOP - SINK) / (1 - HOP - SINK));
@@ -149,6 +157,8 @@ export function KnightBoard({
       const drop = sink * size * 0.92;
       const piece = pieceRef.current!;
       piece.style.width = piece.style.height = `${size}px`;
+      // Hidden until this first places it (see the button's classes).
+      piece.style.visibility = "visible";
       piece.style.transform = `translate(${x - size / 2}px, ${foot - size * 0.92 + drop}px)`;
       piece.style.clipPath = sink > 0 ? `inset(0 0 ${8 + sink * 92}% 0)` : "";
       bobRef.current!.classList.toggle("animate-bob", t === 0);
@@ -178,16 +188,40 @@ export function KnightBoard({
         ([cx, cy], n) =>
           `${lerp(cx, full[n]![0], e)}px ${lerp(cy, full[n]![1], e)}px`,
       );
-      const light = sections[i]!.tone === "light";
       cover.style.visibility = "visible";
       cover.style.clipPath = `polygon(${points.join(",")})`;
-      cover.style.backgroundColor = light
-        ? `color-mix(in oklch, var(--square-dark), var(--square-light) ${e * 100}%)`
-        : "var(--square-dark)";
-      cover.dataset.tone = light && e > 0.5 ? "light" : "dark";
+      // Dark wood while it grows, turning into the page as it fills it:
+      // the section below sits on the page background.
+      cover.style.backgroundColor = `color-mix(in oklch, var(--square-dark), var(--background) ${e ** 1.6 * 100}%)`;
     },
     [sections],
   );
+
+  // The URL follows the page: arriving in a section gives it its own
+  // history entry (#about, #experience...), so Back always returns to the
+  // board; getting back to the board by scrolling pops that entry.
+  const arrive = useCallback(
+    (i: number) => {
+      const hash = `#${sections[i]!.id}`;
+      if (location.hash === hash) return;
+      if (location.hash) {
+        history.replaceState(null, "", hash);
+      } else {
+        history.pushState(null, "", hash);
+        pushed.current = true;
+      }
+    },
+    [sections],
+  );
+  const leave = useCallback(() => {
+    if (!location.hash) return;
+    if (pushed.current) {
+      pushed.current = false;
+      history.back();
+    } else {
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  }, []);
 
   // Scroll through the runway drives the move to About.
   useEffect(() => {
@@ -199,7 +233,14 @@ export function KnightBoard({
       if (!runway) return;
       const length = runway.offsetHeight - innerHeight;
       const p = length > 0 ? clamp(scrollY / length) : 0;
-      if (!busy.current) paint(0, p);
+      if (!busy.current) {
+        // Back on the board: scrolling down leads to About again.
+        if (p === 0 && active.current !== 0)
+          onActiveChange((active.current = 0));
+        paint(active.current, p);
+        if (p === 1) arrive(active.current);
+        if (p === 0) leave();
+      }
       if (p < 1 !== onBoard) onBoardChange((onBoard = p < 1));
     };
     const schedule = () => {
@@ -222,7 +263,7 @@ export function KnightBoard({
       clearInterval(settle);
       clearTimeout(stopSettling);
     };
-  }, [paint, onBoardChange]);
+  }, [paint, onBoardChange, onActiveChange, arrive, leave]);
 
   // A click or a drop: the same frames, played over time, then straight
   // to the section (whose background the square has just become).
@@ -231,6 +272,8 @@ export function KnightBoard({
       if (busy.current || scrollY > 0) return;
       busy.current = true;
       setSelected(false);
+      // Swap the section in now; it renders hidden while the move plays.
+      onActiveChange((active.current = i));
       const root = document.documentElement;
       root.style.overflow = "hidden";
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -246,8 +289,52 @@ export function KnightBoard({
       if (section) scrollTo({ top: section.offsetTop, behavior: "instant" });
       busy.current = false;
     },
-    [paint, sections],
+    [paint, sections, onActiveChange],
   );
+
+  // Back / Forward, and links straight to a section (/#projects).
+  useEffect(() => {
+    // Scroll position comes from the hash, not the browser's memory.
+    history.scrollRestoration = "manual";
+    const indexOf = (hash: string) =>
+      sections.findIndex((s) => `#${s.id}` === hash);
+
+    // Opening the site on a section: put the board underneath it in the
+    // history, then open the section directly.
+    const start = started.current ? -1 : indexOf(location.hash);
+    started.current = true;
+    if (start >= 0) {
+      history.replaceState(null, "", location.pathname + location.search);
+      history.pushState(null, "", `#${sections[start]!.id}`);
+      pushed.current = true;
+      onActiveChange((active.current = start));
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const section = document.getElementById(sections[start]!.id);
+          if (section)
+            scrollTo({ top: section.offsetTop, behavior: "instant" });
+        }),
+      );
+    }
+
+    const onPop = () => {
+      const i = indexOf(location.hash);
+      // Other fragments (the skip link's #main) aren't ours.
+      if (location.hash && i < 0) return;
+      if (i < 0) {
+        // Back to the board: scroll up, which plays the move in reverse.
+        pushed.current = false;
+        if (scrollY > 0) scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      // Forward (or a typed hash): make that move from the board.
+      pushed.current = true;
+      if (scrollY > 0) scrollTo({ top: 0, behavior: "instant" });
+      requestAnimationFrame(() => void move(i));
+    };
+    addEventListener("popstate", onPop);
+    return () => removeEventListener("popstate", onPop);
+  }, [sections, move, onActiveChange]);
 
   const spotAt = (x: number, y: number) => {
     const hit = document
@@ -356,8 +443,8 @@ export function KnightBoard({
               {Array.from({ length: 25 }, (_, n) => {
                 const col = n % 5;
                 const row = Math.floor(n / 5);
-                const i = SPOTS.findIndex(
-                  (s) => s.col === col && s.row === row,
+                const i = sections.findIndex(
+                  (s) => SPOT[s.id].col === col && SPOT[s.id].row === row,
                 );
                 const dark = (col + row) % 2 === 1;
                 if (i < 0)
@@ -389,12 +476,25 @@ export function KnightBoard({
                     onClick={() => void move(i)}
                     aria-label={`${t.rail.jump} ${t.nav[section.id]}`}
                     className={cn(
-                      "bg-square-dark group relative transition-[transform,box-shadow] duration-300 ease-out outline-none [transform-style:preserve-3d] hover:[transform:translateZ(var(--edge))] hover:animate-none hover:bg-[var(--square-hover)] hover:shadow-[0_10px_24px_-6px_rgb(0_0_0/0.45)]",
-                      showMoves ? "animate-breathe-strong" : "animate-breathe",
-                      dragOver === i && "animate-none bg-[var(--square-hover)]",
+                      "bg-square-dark group relative transition-[transform,box-shadow] duration-300 ease-out outline-none [transform-style:preserve-3d] hover:[transform:translateZ(var(--edge))] hover:bg-[var(--square-hover)] hover:shadow-[0_10px_24px_-6px_rgb(0_0_0/0.45)]",
+                      dragOver === i && "bg-[var(--square-hover)]",
                     )}
                   >
                     <Corners />
+                    {/* The breathing: light wood fading in and out on top of
+                        the square. Off while the square is highlighted. */}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        // Resting at 0, so it stays invisible when reduced
+                        // motion collapses the animation.
+                        "bg-square-light absolute inset-0 opacity-0 group-hover:hidden",
+                        showMoves
+                          ? "animate-breathe-strong [--breathe:0.38]"
+                          : "animate-breathe",
+                        dragOver === i && "hidden",
+                      )}
+                    />
                     {/* A legal-move dot, as on chess.com: always there,
                         larger while the knight is picked up. */}
                     <span
@@ -422,7 +522,9 @@ export function KnightBoard({
                         ref={(el) => {
                           labelRefs.current[i] = el;
                         }}
-                        className="bg-background/90 text-foreground absolute bottom-0 left-0 flex -translate-x-1/2 items-center gap-1 rounded-full py-1 pr-3 pl-1.5 text-xs font-medium whitespace-nowrap shadow-[0_6px_16px_-8px_var(--shadow)] transition-[translate,scale,background-color,color] duration-300 group-hover:-translate-y-2 group-hover:scale-110 group-hover:bg-[var(--board-rim)] group-hover:text-[var(--on-dark)] sm:text-sm md:gap-1.5 md:py-1.5 md:pr-4 md:pl-2 md:text-base"
+                        // White pills in both themes: they sit on the wooden board,
+                        // which doesn't change with the theme.
+                        className="absolute bottom-0 left-0 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/95 py-1 pr-3 pl-1.5 text-xs font-medium whitespace-nowrap text-[#2b1d12] shadow-[0_6px_16px_-8px_rgb(0_0_0/0.45)] ring-[var(--square-hover)] transition-[translate,scale,box-shadow] duration-300 group-hover:-translate-y-2 group-hover:scale-110 group-hover:ring-2 sm:text-sm md:gap-1.5 md:py-1.5 md:pr-4 md:pl-2 md:text-base"
                       >
                         <ChessPiece
                           type={section.piece}
@@ -473,7 +575,9 @@ export function KnightBoard({
             aria-label={t.hero.knight}
             aria-pressed={selected}
             className={cn(
-              "text-foreground absolute top-0 left-0 touch-none outline-none",
+              // Hidden and sizeless until paint() places it: before that
+              // the SVG would fall back to the browser's default 300x150.
+              "text-foreground invisible absolute top-0 left-0 size-0 touch-none outline-none",
               ghost && "opacity-0",
             )}
           >
@@ -491,11 +595,10 @@ export function KnightBoard({
         </p>
 
         {/* The growing square. It covers the board (and blocks it) while
-            visible; data-tone lets the navbar match it. */}
+            visible. */}
         <div
           ref={coverRef}
           aria-hidden
-          data-tone="dark"
           className="invisible absolute inset-0 z-10"
         />
 

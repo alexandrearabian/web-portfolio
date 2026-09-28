@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "./cursors.css";
 
+/* Theme is set on <html data-theme> by the toggle (see layout.tsx), so
+   `dark:` follows the site's toggle, not the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
   --font-display: var(--font-instrument-serif), Georgia, serif;
@@ -9,34 +12,6 @@
   --font-mono:
     var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-
-  /* Promotion: the pawn's square gives up a queen that pops out of the
-     rail, twice its size and glowing, wiggles, then shrinks back to fly. */
-  --animate-jiggle: jiggle 0.78s cubic-bezier(0.34, 1.3, 0.64, 1) both;
-  @keyframes jiggle {
-    0% {
-      transform: scale(0.3);
-      filter: drop-shadow(0 0 0 var(--brass));
-    }
-    22% {
-      transform: scale(2) rotate(-16deg);
-      filter: drop-shadow(0 0 10px var(--brass));
-    }
-    42% {
-      transform: scale(1.9) rotate(13deg);
-    }
-    62% {
-      transform: scale(1.8) rotate(-9deg);
-    }
-    80% {
-      transform: scale(1.5) rotate(4deg);
-      filter: drop-shadow(0 0 6px var(--brass));
-    }
-    to {
-      transform: none;
-      filter: none;
-    }
-  }
 
   /* The knight bobs on its square, waiting to be moved. */
   --animate-bob: bob 1.6s ease-in-out infinite;
@@ -46,26 +21,20 @@
     }
   }
 
-  /* The section squares breathe towards the light square's colour:
-     softly at rest, more when the knight's moves are shown. */
+  /* The section squares breathe: a light-wood layer over each one fades
+     in and out, softly at rest, more when the knight's moves are shown.
+     It animates a layer's opacity, not the square's colour: the CSS
+     pipeline drops color-mix() of variables inside keyframes, and the
+     square itself must never fade. */
   --animate-breathe: breathe 3.4s ease-in-out infinite;
+  --animate-breathe-strong: breathe 1.3s ease-in-out infinite;
   @keyframes breathe {
-    50% {
-      background-color: color-mix(
-        in oklch,
-        var(--square-dark),
-        var(--square-light) 16%
-      );
+    0%,
+    100% {
+      opacity: 0;
     }
-  }
-  --animate-breathe-strong: breathe-strong 1.3s ease-in-out infinite;
-  @keyframes breathe-strong {
     50% {
-      background-color: color-mix(
-        in oklch,
-        var(--square-dark),
-        var(--square-light) 38%
-      );
+      opacity: var(--breathe, 0.16);
     }
   }
 }
@@ -86,19 +55,19 @@
 }
 
 /*
-  A wooden board (light and dark wood) on cream paper. --brass is decorative (rules, the
-  promoted square); text that needs the accent uses --accent, a deeper
-  brass that clears 4.5:1. --on-dark / --on-light are the ink for each
-  square colour, used by the .tone-* sections below.
+  A white page; the wooden board supplies the colour. Sections, text and
+  details take their accents from the board's two woods: --accent (dark
+  wood, also used for text: 4.8:1 on white) and --brass (light wood, for
+  fills and markers). The board itself looks the same in both themes.
 */
 :root {
-  --background: oklch(0.958 0.011 78);
-  --card: oklch(0.975 0.008 78);
-  --foreground: oklch(0.27 0.03 48);
-  --muted-foreground: oklch(0.47 0.03 52);
-  --border: oklch(0.27 0.03 48 / 0.14);
-  --brass: oklch(0.7 0.075 72);
-  --accent: oklch(0.48 0.07 60);
+  --background: #ffffff;
+  --card: #faf6f0;
+  --foreground: #2b1d12;
+  --muted-foreground: #6e5a48;
+  --border: rgb(43 29 18 / 0.12);
+  --accent: #8b6440;
+  --brass: #ddbf8e;
   --square-light: #ddbf8e;
   --square-dark: #8b6440;
   --board-rim: #4a3121;
@@ -106,53 +75,24 @@
   /* A section square under the pointer: the golden highlight of a
      wooden board. */
   --square-hover: #d6a95e;
-  /* The pawn rail's own squares, a lighter board than the page's two
-     section colours so it reads on both. */
-  --rail-light: #efdfbe;
-  --rail-dark: #a87e53;
-  --piece-black: #171210;
-  --on-light: #2b1d12;
-  --on-light-muted: #5e4630;
-  --on-light-accent: #6b431b;
-  --on-dark: #fffaf1;
-  --on-dark-muted: #f4eadb;
-  --on-dark-accent: #f6d9a0;
-  --shadow: oklch(0.27 0.03 48 / 0.3);
+  --shadow: rgb(43 29 18 / 0.28);
   --piece-detail: var(--background);
 
   color-scheme: light;
 }
 
-/*
-  Sections sit on a square's colour: the page tokens are remapped so
-  everything inside (chips, cards, pieces) follows. The expanding square
-  on the board becomes exactly this background. In the base layer, so
-  utilities (e.g. the navbar's translucent bg) still win.
-*/
-@layer base {
-  .tone-dark,
-  .tone-light {
-    --border: color-mix(in oklch, var(--foreground) 16%, transparent);
-    --card: color-mix(in oklch, var(--background), var(--foreground) 5%);
-    --piece-detail: var(--background);
-    --brass: var(--accent);
-    background-color: var(--background);
-    color: var(--foreground);
-  }
+/* Dark: a dark walnut page, cream text, the light wood as the accent. */
+[data-theme="dark"] {
+  --background: #16110d;
+  --card: #201913;
+  --foreground: #f3ebdf;
+  --muted-foreground: #bba995;
+  --border: rgb(243 235 223 / 0.12);
+  --accent: #ddbf8e;
+  --brass: #b88d5c;
+  --shadow: rgb(0 0 0 / 0.55);
 
-  .tone-dark {
-    --background: var(--square-dark);
-    --foreground: var(--on-dark);
-    --muted-foreground: var(--on-dark-muted);
-    --accent: var(--on-dark-accent);
-  }
-
-  .tone-light {
-    --background: var(--square-light);
-    --foreground: var(--on-light);
-    --muted-foreground: var(--on-light-muted);
-    --accent: var(--on-light-accent);
-  }
+  color-scheme: dark;
 }
 
 @layer base {
