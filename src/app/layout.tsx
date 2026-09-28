@@ -4,6 +4,8 @@ import { LanguageProvider } from "~/contexts/LanguageContext";
 import { type Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import Script from "next/script";
+import { cookies, headers } from "next/headers";
+import type { Language } from "~/lib/translations";
 import { Navbar } from "~/components/navbar";
 
 // Runs before first paint so a saved dark theme never flashes light.
@@ -38,12 +40,22 @@ const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
 });
 
-export default function RootLayout({
+// The visitor's language, decided on the server so the first render is
+// already right: a saved choice (cookie), else the browser's preference.
+async function pickLanguage(): Promise<Language> {
+  const saved = (await cookies()).get("lang")?.value;
+  if (saved === "en" || saved === "es") return saved;
+  const accept = (await headers()).get("accept-language") ?? "";
+  return accept.trim().toLowerCase().startsWith("es") ? "es" : "en";
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const language = await pickLanguage();
   return (
     <html
-      lang="en"
+      lang={language}
       className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
       // The theme script sets data-theme before React hydrates.
       suppressHydrationWarning
@@ -60,7 +72,7 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <LanguageProvider>
+        <LanguageProvider initial={language}>
           <ThemeProvider>
             <Navbar />
             <main id="main">{children}</main>

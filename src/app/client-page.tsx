@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowUpRight, Check, Copy, Download, Mail } from "lucide-react";
+import { ArrowUpRight, Check, Copy, Download } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLanguage } from "~/contexts/LanguageContext";
 import { cn } from "~/lib/utils";
 import type { Role, TranslationKeys } from "~/lib/translations";
@@ -92,9 +92,8 @@ function RevealText({
 // A section is a room: only one is on the page at a time, below the
 // board's runway. It overlaps the runway's last screen, hidden, and shows
 // the moment the growing square has filled the screen (`revealed`),
-// rising in on top of it. At least a screen tall so
-// the runway can always be scrolled to its end. The content remounts on
-// each reveal so the rise plays every time.
+// rising in on top of it. At least a screen tall so the runway can always
+// be scrolled to its end.
 function Section({
   id,
   revealed,
@@ -117,12 +116,13 @@ function Section({
       )}
     >
       <motion.div
-        key={String(revealed)}
-        // Starts well down the screen, so it reads as arriving.
-        className={cn("shell flex-1 pt-[34svh] pb-28 md:pb-36", className)}
+        // Starts just under the navbar, like any page. Rises in on each
+        // reveal and drops out at once when the board comes back (no
+        // remount: rebuilding it mid-scroll made phones stutter).
+        className={cn("shell flex-1 pt-24 pb-28 md:pt-32 md:pb-36", className)}
         initial={{ opacity: 0, y: 48 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: EASE }}
+        animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 48 }}
+        transition={revealed ? { duration: 0.9, ease: EASE } : { duration: 0 }}
       >
         {children}
       </motion.div>
@@ -386,12 +386,12 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
 
   // Copy the address for pasting elsewhere, in addition to letting the
   // mailto: link open the visitor's mail app as normal.
-  const handleEmailClick = () => {
+  const handleEmailClick = useCallback(() => {
     void navigator.clipboard?.writeText(EMAIL).then(() => {
       setEmailCopied(true);
       setTimeout(() => setEmailCopied(false), 2500);
     });
-  };
+  }, []);
 
   const skillGroups = [
     { key: "frontend", label: t.about.groups.frontend, items: SKILLS.frontend },
@@ -425,32 +425,76 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
     [repos, t],
   );
 
+  // LinkedIn, GitHub and the CV as quiet icon links: the footer's links,
+  // and Contact's.
+  const socials = (
+    <ul className="flex flex-wrap gap-x-7 gap-y-3 text-sm font-medium">
+      {[
+        {
+          href: LINKEDIN_URL,
+          label: t.contact.linkedin,
+          Icon: LinkedInLogoIcon,
+        },
+        { href: GITHUB_URL, label: t.contact.github, Icon: GitHubLogoIcon },
+      ].map((link) => (
+        <li key={link.href}>
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-accent inline-flex items-center gap-1.5 transition-colors"
+          >
+            <link.Icon className="size-4" />
+            {link.label}
+            <ArrowUpRight className="size-4" />
+          </a>
+        </li>
+      ))}
+      <li>
+        <a
+          href={cvHref}
+          download={cvName}
+          className="hover:text-accent inline-flex items-center gap-1.5 transition-colors"
+        >
+          <Download className="size-4" />
+          {t.contact.cv}
+        </a>
+      </li>
+    </ul>
+  );
+
   const rooms: Record<BoardSection["id"], React.ReactNode> = {
-    // The pitch in the display serif; key facts in three columns under
-    // it; then the stack, set like a menu card.
+    // A short pitch in the display serif, then the stack (set like a menu
+    // card), then languages and school.
     about: (
       <>
         <Heading piece="knight" title={t.about.title} />
-        <p className="font-display max-w-[32ch] text-[1.85rem] leading-[1.2] sm:text-[2.35rem] lg:text-[2.75rem]">
+        <p className="font-display max-w-[28ch] text-[1.85rem] leading-[1.2] sm:text-[2.35rem] lg:text-[2.75rem]">
           {t.about.lead}
         </p>
 
-        <dl className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-14">
-          {[
-            { label: t.about.based, value: t.about.basedValue },
-            {
-              label: t.experience.education.title,
-              value: t.about.educationValue,
-            },
-          ].map((fact) => (
-            <div key={fact.label} className="border-border border-t pt-5">
-              <dt className="text-muted-foreground text-sm">{fact.label}</dt>
-              <dd className="font-display mt-2 text-2xl leading-snug">
-                {fact.value}
-              </dd>
-            </div>
-          ))}
-          <div className="border-border border-t pt-5 sm:col-span-2 lg:col-span-1">
+        <div className="mt-16">
+          <h3 className="font-display text-3xl italic">{t.about.skills}</h3>
+          {/* Two columns even on a phone: four short lists read better
+              side by side than as one long column. */}
+          <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4 lg:gap-14">
+            {skillGroups.map((group) => (
+              <div key={group.key} className="border-border border-t pt-5">
+                <dt className="text-sm font-medium">{group.label}</dt>
+                <dd>
+                  <ul className="text-muted-foreground mt-3 space-y-1 text-[15px] sm:space-y-1.5 sm:text-base">
+                    {group.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <dl className="mt-16 grid gap-10 sm:grid-cols-2 lg:gap-14">
+          <div className="border-border border-t pt-5">
             <dt className="text-muted-foreground text-sm">
               {t.about.languagesTitle}
             </dt>
@@ -470,27 +514,15 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
               </ul>
             </dd>
           </div>
+          <div className="border-border border-t pt-5">
+            <dt className="text-muted-foreground text-sm">
+              {t.experience.education.title}
+            </dt>
+            <dd className="font-display mt-2 text-2xl leading-snug">
+              {t.about.educationValue}
+            </dd>
+          </div>
         </dl>
-
-        <div className="mt-20">
-          <h3 className="font-display text-3xl italic">{t.about.skills}</h3>
-          {/* Two columns even on a phone: four short lists read better
-              side by side than as one long column. */}
-          <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4 lg:gap-14">
-            {skillGroups.map((group) => (
-              <div key={group.key} className="border-border border-t pt-5">
-                <dt className="text-sm font-medium">{group.label}</dt>
-                <dd>
-                  <ul className="text-muted-foreground mt-3 space-y-1 text-[15px] sm:space-y-1.5 sm:text-base">
-                    {group.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
       </>
     ),
     experience: (
@@ -543,51 +575,29 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
     contact: (
       <>
         <Heading piece="queen" title={t.contact.title} />
-        {/* The pitch and the two things a recruiter wants (write, or take
-            the CV) on the left; every channel on a card on the right. */}
-        <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
-          <div className="lg:col-span-6">
+        {/* Desktop: the pitch on the left; the address (the one big thing
+            to take away) and the footer's links on the right. Stacked on
+            mobile. */}
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-5">
             <p className="max-w-[42ch] text-xl leading-relaxed">
               {t.contact.body}
             </p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <a
-                href={`mailto:${EMAIL}`}
-                onClick={handleEmailClick}
-                className="bg-foreground text-background hover:bg-accent inline-flex h-12 items-center gap-2.5 rounded-full px-6 text-sm font-medium transition-colors active:scale-[0.98]"
-              >
-                <Mail className="size-4" />
-                {t.hero.email}
-              </a>
-              <a
-                href={cvHref}
-                download={cvName}
-                className="border-foreground/20 hover:border-foreground inline-flex h-12 items-center gap-2.5 rounded-full border px-6 text-sm font-medium transition-colors active:scale-[0.98]"
-              >
-                <Download className="size-4" />
-                {t.contact.cv}
-              </a>
-            </div>
             <p className="text-muted-foreground mt-8">{t.contact.location}</p>
           </div>
 
-          <ul className="bg-card border-border divide-border divide-y self-start rounded-md border lg:col-span-6">
-            <li className="flex items-center gap-4 px-5 py-5 sm:px-7">
-              <span className="border-border bg-background grid size-10 shrink-0 place-items-center rounded-full border">
-                <EnvelopeClosedIcon className="size-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-muted-foreground text-sm">
-                  {t.contact.emailLabel}
-                </p>
-                <a
-                  href={`mailto:${EMAIL}`}
-                  onClick={handleEmailClick}
-                  className="font-display hover:text-accent mt-1 block truncate text-xl transition-colors sm:text-2xl"
-                >
-                  {EMAIL}
-                </a>
-              </div>
+          <div className="lg:col-span-7">
+            <p className="text-muted-foreground text-sm">
+              {t.contact.emailLabel}
+            </p>
+            <div className="mt-2 flex items-center gap-4">
+              <a
+                href={`mailto:${EMAIL}`}
+                onClick={handleEmailClick}
+                className="font-display hover:text-accent min-w-0 truncate text-[clamp(1.6rem,5vw,3rem)] leading-tight underline decoration-current/20 decoration-1 underline-offset-[0.2em] transition-colors hover:decoration-current lg:text-[2.6rem]"
+              >
+                {EMAIL}
+              </a>
               <button
                 type="button"
                 onClick={handleEmailClick}
@@ -601,44 +611,9 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
                   <Copy className="size-4" />
                 )}
               </button>
-            </li>
-            {[
-              {
-                label: t.contact.linkedin,
-                value: "in/alexandre-arabian-jensezian",
-                href: LINKEDIN_URL,
-                Icon: LinkedInLogoIcon,
-              },
-              {
-                label: t.contact.github,
-                value: "github.com/alexandrearabian",
-                href: GITHUB_URL,
-                Icon: GitHubLogoIcon,
-              },
-            ].map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-4 px-5 py-5 sm:px-7"
-                >
-                  <span className="border-border bg-background grid size-10 shrink-0 place-items-center rounded-full border">
-                    <link.Icon className="size-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="text-muted-foreground block text-sm">
-                      {link.label}
-                    </span>
-                    <span className="font-display group-hover:text-accent mt-1 block truncate text-xl transition-colors sm:text-2xl">
-                      {link.value}
-                    </span>
-                  </span>
-                  <ArrowUpRight className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </a>
-              </li>
-            ))}
-          </ul>
+            </div>
+            <div className="border-border mt-8 border-t pt-6">{socials}</div>
+          </div>
         </div>
 
         <p className="border-border text-muted-foreground mt-24 border-t pt-6 text-xs">
@@ -672,39 +647,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             {EMAIL}
           </a>
         </div>
-        <ul className="flex flex-wrap gap-x-7 gap-y-3 text-sm font-medium">
-          {[
-            {
-              href: LINKEDIN_URL,
-              label: t.contact.linkedin,
-              Icon: LinkedInLogoIcon,
-            },
-            { href: GITHUB_URL, label: t.contact.github, Icon: GitHubLogoIcon },
-          ].map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent inline-flex items-center gap-1.5 transition-colors"
-              >
-                <link.Icon className="size-4" />
-                {link.label}
-                <ArrowUpRight className="size-4" />
-              </a>
-            </li>
-          ))}
-          <li>
-            <a
-              href={cvHref}
-              download={cvName}
-              className="hover:text-accent inline-flex items-center gap-1.5 transition-colors"
-            >
-              <Download className="size-4" />
-              {t.contact.cv}
-            </a>
-          </li>
-        </ul>
+        {socials}
       </div>
       <div className="shell text-muted-foreground border-border flex flex-col gap-1 border-t py-5 text-xs sm:flex-row sm:justify-between">
         <p>© {new Date().getFullYear()} Alexandre Arabian</p>
@@ -713,8 +656,10 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
     </footer>
   );
 
-  return (
-    <>
+  // The board is built once per language: crossing into a section (which
+  // changes onBoard/active here) mid-scroll mustn't re-render it.
+  const board = useMemo(
+    () => (
       <KnightBoard
         sections={SECTIONS}
         onBoardChange={setOnBoard}
@@ -776,6 +721,13 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
           </motion.div>
         }
       />
+    ),
+    [t, cvHref, cvName, handleEmailClick],
+  );
+
+  return (
+    <>
+      {board}
 
       <Section
         key={room}

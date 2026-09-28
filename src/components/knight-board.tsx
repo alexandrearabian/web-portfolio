@@ -60,7 +60,7 @@ function Corners() {
 /*
   The opening screen: a 5×5 board seen at an angle, a knight in the
   middle and a section on each of four squares it can reach. The screen
-  is pinned while you scroll through 60svh of "runway", and the
+  is pinned while you scroll through 2.5 screens of "runway", and the
   scroll position *is* the animation: the knight jumps to the active
   section's square and the square grows until it fills the screen as that
   section's background. Stop halfway and it stays halfway; scroll up and
@@ -91,7 +91,11 @@ export function KnightBoard({
 }) {
   const { t } = useLanguage();
   const [selected, setSelected] = useState(false);
-  const [ghost, setGhost] = useState<{ x: number; y: number; size: number }>();
+  // The knight while dragged: its size is state (set once per drag), its
+  // position is written straight to ghostRef, so moving the pointer
+  // doesn't re-render the whole board.
+  const [ghost, setGhost] = useState<{ size: number; x: number; y: number }>();
+  const ghostRef = useRef<HTMLDivElement>(null);
   const [dragOver, setDragOver] = useState(-1);
 
   const runwayRef = useRef<HTMLDivElement>(null);
@@ -114,17 +118,55 @@ export function KnightBoard({
   const dragFrom = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
 
+  // The board's projected geometry, measured once and reused: reading
+  // layout on every scroll frame (between style writes) is what made the
+  // move stutter on phones. Cleared on resize, on layout changes and while
+  // the board is still sliding in; the next paint measures again. Every
+  // position is relative to the pinned screen (the cover's box).
+  type Geometry = {
+    sq: number;
+    centre: Point[];
+    spots: Point[][];
+    // The scene's top-left in the pinned screen (the knight lives in it).
+    scene: Point;
+    w: number;
+    h: number;
+  };
+  const geometry = useRef<Geometry | null>(null);
+  // What was last drawn: scrolling through a section keeps the move at
+  // its end, and repainting the full-screen cover for nothing is costly.
+  const painted = useRef("");
+  const measure = useCallback((): Geometry | null => {
+    const grid = gridRef.current;
+    const cover = coverRef.current;
+    const scene = sceneRef.current;
+    if (!grid || !cover || !scene || !centreRef.current) return null;
+    const box = cover.getBoundingClientRect();
+    const s = scene.getBoundingClientRect();
+    return {
+      sq: grid.offsetWidth / 5,
+      centre: corners(centreRef.current, box),
+      spots: spotRefs.current.map((el) => (el ? corners(el, box) : [])),
+      scene: [s.left - box.left, s.top - box.top],
+      w: box.width,
+      h: box.height,
+    };
+  }, []);
+
   // Draws the move to section i at progress t (0 = knight in the centre,
   // 1 = square filling the screen). Writes styles directly: it runs on
   // every scroll frame.
   const paint = useCallback(
     (i: number, t: number) => {
-      const scene = sceneRef.current;
-      const grid = gridRef.current;
+      const key = `${i}:${t}`;
+      if (geometry.current && painted.current === key) return;
+      const g = (geometry.current ??= measure());
       const cover = coverRef.current;
-      const target = spotRefs.current[i];
-      if (!scene || !grid || !cover || !target || !centreRef.current) return;
-      const sq = grid.offsetWidth / 5;
+      if (!g || !cover || !g.spots[i]?.length) return;
+      painted.current = key;
+      // The knight is positioned inside the scene.
+      const [ox, oy] = g.scene;
+      const sq = g.sq;
       const spot = SPOT[sections[i]!.id];
       const hop = clamp(t / HOP);
       const sink = clamp((t - HOP) / SINK) ** 2;
@@ -141,9 +183,8 @@ export function KnightBoard({
 
       // The knight: its foot follows the projected square centres, its
       // size the projected square width, and it arcs up mid-jump.
-      const box = scene.getBoundingClientRect();
-      const from = corners(centreRef.current, box);
-      const to = corners(target, box);
+      const from = g.centre;
+      const to = g.spots[i]!;
       const mid = (q: Point[], axis: 0 | 1) =>
         q.reduce((sum, p) => sum + p[axis], 0) / q.length;
       // Mean of the square's far and near edges.
@@ -159,7 +200,7 @@ export function KnightBoard({
       piece.style.width = piece.style.height = `${size}px`;
       // Hidden until this first places it (see the button's classes).
       piece.style.visibility = "visible";
-      piece.style.transform = `translate(${x - size / 2}px, ${foot - size * 0.92 + drop}px)`;
+      piece.style.transform = `translate(${x - ox - size / 2}px, ${foot - oy - size * 0.92 + drop}px)`;
       piece.style.clipPath = sink > 0 ? `inset(0 0 ${8 + sink * 92}% 0)` : "";
       bobRef.current!.classList.toggle("animate-bob", t === 0);
       // The label and move dot of the square it's heading for make way.
@@ -176,15 +217,14 @@ export function KnightBoard({
       // The growing square: a layer clipped to the square's corners,
       // pulled out to the screen's corners.
       const e = easeInOut(grow);
-      const coverBox = cover.getBoundingClientRect();
-      const [w, h] = [coverBox.width, coverBox.height];
+      const { w, h } = g;
       const full: Point[] = [
         [0, 0],
         [w, 0],
         [w, h],
         [0, h],
       ];
-      const points = corners(target, coverBox).map(
+      const points = to.map(
         ([cx, cy], n) =>
           `${lerp(cx, full[n]![0], e)}px ${lerp(cy, full[n]![1], e)}px`,
       );
@@ -194,7 +234,7 @@ export function KnightBoard({
       // the section below sits on the page background.
       cover.style.backgroundColor = `color-mix(in oklch, var(--square-dark), var(--background) ${e ** 1.6 * 100}%)`;
     },
-    [sections],
+    [sections, measure],
   );
 
   // The URL follows the page: arriving in a section gives it its own
@@ -227,41 +267,68 @@ export function KnightBoard({
   useEffect(() => {
     let raf = 0;
     let onBoard: boolean | undefined;
+    let leaving = 0;
     const frame = () => {
       raf = 0;
       const runway = runwayRef.current;
-      if (!runway) return;
-      const length = runway.offsetHeight - innerHeight;
-      const p = length > 0 ? clamp(scrollY / length) : 0;
+      const pinned = coverRef.current;
+      if (!runway || !pinned) return;
+      // The runway's length is its height minus the pinned screen's (a
+      // fixed 100svh), not the window's: on phones innerHeight changes as
+      // the address bar shows and hides, which made the move jump.
+      const length = runway.offsetHeight - pinned.offsetHeight;
+      // The move completes a little before the runway ends. That last
+      // stretch (40% of a screen) is a hold: the section scrolls in over
+      // the finished square, and on the way back up it scrolls away
+      // before the square starts shrinking, instead of at the first nudge.
+      const hold = pinned.offsetHeight * 0.4;
+      const p = length > hold ? clamp(scrollY / (length - hold)) : 0;
       if (!busy.current) {
         // Back on the board: scrolling down leads to About again.
         if (p === 0 && active.current !== 0)
           onActiveChange((active.current = 0));
         paint(active.current, p);
         if (p === 1) arrive(active.current);
-        if (p === 0) leave();
+        // Leave the section's history entry once the page has come to rest
+        // on the board, not mid-scroll (history.back() there made mobile
+        // browsers stutter).
+        clearTimeout(leaving);
+        if (p === 0) leaving = window.setTimeout(leave, 250);
       }
-      if (p < 1 !== onBoard) onBoardChange((onBoard = p < 1));
+      if (p < 1 !== onBoard) {
+        onBoardChange((onBoard = p < 1));
+        // In a section the board is out of sight: pause its endless
+        // animations (the knight's bob, the squares' breathing).
+        runway.toggleAttribute("data-idle", !onBoard);
+      }
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(frame);
     };
+    const remeasure = () => {
+      geometry.current = null;
+      schedule();
+    };
     schedule();
     addEventListener("scroll", schedule, { passive: true });
-    addEventListener("resize", schedule);
-    // The board slides in and fonts settle after mount: keep the flat
-    // knight on its square while that happens.
-    const ro = new ResizeObserver(schedule);
+    addEventListener("resize", remeasure);
+    // The board slides in and fonts settle after mount: keep measuring
+    // while that happens.
+    const ro = new ResizeObserver(remeasure);
     if (sceneRef.current) ro.observe(sceneRef.current);
-    const settle = setInterval(schedule, 50);
+    const settle = setInterval(remeasure, 50);
     const stopSettling = setTimeout(() => clearInterval(settle), 1600);
+    // Web fonts can land later than that and move the board (the intro
+    // above it changes height).
+    void document.fonts?.ready.then(remeasure);
     return () => {
       cancelAnimationFrame(raf);
       removeEventListener("scroll", schedule);
-      removeEventListener("resize", schedule);
+      removeEventListener("resize", remeasure);
       ro.disconnect();
       clearInterval(settle);
       clearTimeout(stopSettling);
+      clearTimeout(leaving);
     };
   }, [paint, onBoardChange, onActiveChange, arrive, leave]);
 
@@ -361,9 +428,18 @@ export function KnightBoard({
       if (Math.hypot(e.clientX - from.x, e.clientY - from.y) < 6) return;
       dragged.current = true;
       setSelected(true);
+      setGhost({
+        size: pieceRef.current!.getBoundingClientRect().height,
+        x: e.clientX,
+        y: e.clientY,
+      });
     }
-    const size = pieceRef.current!.getBoundingClientRect().height;
-    setGhost({ x: e.clientX, y: e.clientY, size });
+    const el = ghostRef.current;
+    if (el) {
+      el.style.left = `${e.clientX}px`;
+      el.style.top = `${e.clientY}px`;
+    }
+    // Same value on most moves, and React skips those re-renders.
     setDragOver(spotAt(e.clientX, e.clientY));
   };
   const onPointerUp = (e: React.PointerEvent) => {
@@ -382,17 +458,20 @@ export function KnightBoard({
   return (
     <div
       ref={runwayRef}
-      className="relative"
-      // 60svh of scroll plays the whole move (see -mt on the first section).
-      style={{ height: "160svh" }}
+      className="relative [&[data-idle]_*]:[animation-play-state:paused]"
+      // Two and a half screens of scroll play the whole move (see -mt on
+      // the section): enough distance that a flick doesn't fly straight
+      // past it into the section.
+      style={{ height: "350svh" }}
       onKeyDown={(e) => {
         if (e.key === "Escape") setSelected(false);
       }}
     >
       <div
-        // Mobile stacks everything; from md the text sits in the top-left
-        // corner the diamond leaves free and the board takes the middle.
-        className="sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-6 overflow-hidden px-4 pt-20 pb-8 [--board:min(84vw,calc((100svh-21rem)*1.4),32rem)] md:pt-14 md:pb-16 md:[--board:min(48vw,calc((100svh-9rem)*1.4),46rem)] lg:[--board:min(54vw,calc((100svh-9rem)*1.4),46rem)]"
+        // Mobile stacks everything, weighted upwards (more padding below)
+        // so the board sits at the screen's centre; from md the text sits
+        // in the top-left corner and the board takes the middle.
+        className="sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-6 overflow-hidden px-4 pt-14 pb-32 [--board:min(84vw,calc((100svh-24rem)*1.4),32rem)] md:pt-14 md:pb-16 md:[--board:min(48vw,calc((100svh-9rem)*1.4),46rem)] lg:[--board:min(54vw,calc((100svh-9rem)*1.4),46rem)]"
         style={
           {
             "--sq": "calc(var(--board) * 0.184)",
@@ -587,7 +666,9 @@ export function KnightBoard({
           </button>
         </div>
 
-        <div className="md:hidden">{actions}</div>
+        {/* Clear of the board's front edge, which reaches below the scene
+            box in perspective. */}
+        <div className="mt-6 md:hidden">{actions}</div>
 
         <p className="text-muted-foreground animate-in fade-in fill-mode-both flex items-center gap-2 text-sm duration-700 [animation-delay:1s] md:absolute md:right-8 md:bottom-8 lg:right-12">
           <ArrowDown className="size-4 animate-bounce" />
@@ -604,9 +685,11 @@ export function KnightBoard({
 
         {ghost && (
           <div
+            ref={ghostRef}
             aria-hidden
             className="text-foreground pointer-events-none fixed z-[46] -translate-x-1/2 -translate-y-3/4 drop-shadow-[0_12px_10px_var(--shadow)]"
             style={{
+              // Where the pointer was when it appeared; moves follow via ref.
               left: ghost.x,
               top: ghost.y,
               width: ghost.size,

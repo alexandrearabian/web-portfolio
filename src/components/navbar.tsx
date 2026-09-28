@@ -27,7 +27,10 @@ function toggleTheme() {
 export function Navbar() {
   const { t } = useLanguage();
   return (
-    <header className="bg-background/85 fixed inset-x-0 top-0 z-50 backdrop-blur-md">
+    // Solid on phones: a backdrop blur re-blurs everything behind the bar
+    // on every scroll frame, which phones can't keep up with over the
+    // board's animation. Frosted from md up.
+    <header className="bg-background/95 md:bg-background/85 fixed inset-x-0 top-0 z-50 md:backdrop-blur-md">
       <nav className="flex h-14 items-center justify-between px-3 lg:px-5">
         {/* Home is the board: on the home page that's the top of the
             page, and scrolling up there plays the move in reverse. */}

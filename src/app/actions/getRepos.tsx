@@ -27,6 +27,20 @@ export type Repo = z.infer<typeof repoSchema> & {
   preview: string | null;
 };
 
+// A repo's website as a full URL, or null. GitHub stores it as typed: ""
+// when unset, sometimes without a protocol ("example.com"), which would be
+// a relative link on the page and break `new URL()` in the Work section.
+function normalizeSite(homepage: string | null | undefined): string | null {
+  const site = homepage?.trim();
+  if (!site) return null;
+  const url = /^https?:\/\//i.test(site) ? site : `https://${site}`;
+  try {
+    return new URL(url).href;
+  } catch {
+    return null;
+  }
+}
+
 // Reads og:image (or twitter:image) from a page, the way messaging apps
 // build a link preview. Cached for a day; any failure just means no image.
 async function sharePreview(site: string): Promise<string | null> {
@@ -77,7 +91,10 @@ export async function getRepos(): Promise<Repo[]> {
             : baseHeaders;
         return await fetch(url, {
           headers,
-          cache: "no-store",
+          // Cached for an hour: fetching on every visit ran into GitHub's
+          // rate limit (60/hour unauthenticated, shared by the host's
+          // servers) and left the Work section empty.
+          next: { revalidate: 3600 },
           signal: AbortSignal.timeout(8000),
         });
       };
@@ -94,19 +111,19 @@ export async function getRepos(): Promise<Repo[]> {
       const parsed = reposSchema.safeParse(data);
       if (!parsed.success) break;
 
-      if (parsed.data.length === 0) break;
-
       for (const repo of parsed.data) {
         all.push({
           ...repo,
           private: repo.private ?? false,
           description: repo.description ?? null,
-          homepage: repo.homepage ?? null,
+          homepage: normalizeSite(repo.homepage),
           language: repo.language ?? null,
           topics: repo.topics ?? [],
           preview: null,
         });
       }
+      // A short page is the last one; don't spend a request on an empty one.
+      if (parsed.data.length < perPage) break;
     }
 
     // Only public repos I own; stars on other people's projects are skipped.

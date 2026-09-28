@@ -28,10 +28,8 @@ export const translations = {
     },
     about: {
       title: "About",
-      lead: "Computer engineer who loves technology and solving problems. Living in different countries and working in five languages has made me flexible and collaborative, and I keep looking for new challenges where I can contribute and grow.",
+      lead: "Computer engineer who loves solving problems. Years abroad and five languages taught me to adapt and work with any team.",
       skills: "Stack",
-      based: "Based in",
-      basedValue: "Barcelona, Spain (open to remote)",
       educationValue: "Computer Engineering, UPM Madrid",
       groups: {
         frontend: "Frontend",
@@ -172,7 +170,7 @@ export const translations = {
       experience: "Experiencia",
       projects: "Proyectos",
       contact: "Contacto",
-      puzzle: "Problema",
+      puzzle: "Puzzle",
     },
     puzzle: {
       intro:
@@ -194,10 +192,8 @@ export const translations = {
     },
     about: {
       title: "Sobre mí",
-      lead: "Ingeniero Informático apasionado por la tecnología y la resolución de problemas. Haber vivido en distintos países y trabajar en varios idiomas me ha dado una mirada flexible y colaborativa, y sigo buscando nuevos retos donde aportar y crecer.",
+      lead: "Ingeniero Informático apasionado por resolver problemas. Vivir en varios países y hablar cinco idiomas me enseñó a adaptarme y trabajar con cualquier equipo.",
       skills: "Tecnologías",
-      based: "Ubicación",
-      basedValue: "Barcelona, España (disponible en remoto)",
       educationValue: "Ingeniería Informática, UPM Madrid",
       groups: {
         frontend: "Frontend",
@@ -379,8 +375,6 @@ type TranslationStructure = {
     title: string;
     lead: string;
     skills: string;
-    based: string;
-    basedValue: string;
     educationValue: string;
     groups: { frontend: string; backend: string; cloud: string; ai: string };
     aiSkills: readonly string[];
