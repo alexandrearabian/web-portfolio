@@ -10,7 +10,7 @@ export function LanguageToggle() {
     <div
       role="group"
       aria-label={t.language.toggle}
-      className="flex rounded-full font-mono text-[11px] uppercase"
+      className="flex font-mono text-xs uppercase"
     >
       {(["en", "es"] as const).map((lang) => (
         <button
@@ -20,9 +20,9 @@ export function LanguageToggle() {
           aria-pressed={language === lang}
           aria-label={lang === "en" ? t.language.english : t.language.spanish}
           className={cn(
-            "rounded-full px-2 py-1.5 transition-colors active:scale-95",
+            "px-1.5 py-2 transition-colors",
             language === lang
-              ? "text-brand"
+              ? "text-foreground"
               : "text-muted-foreground hover:text-foreground",
           )}
         >

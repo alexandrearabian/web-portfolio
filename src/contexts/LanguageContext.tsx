@@ -15,23 +15,22 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 );
 
-function getBrowserLanguage(): Language {
-  const langCode = navigator.language.toLowerCase().split("-")[0];
-  return langCode === "es" ? "es" : "en";
-}
-
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Always render "en" on the server and on the first client render, so the
-  // markup matches. Only switch to the browser's language after mount.
-  const [language, setLanguage] = useState<Language>("en");
-
-  useEffect(() => {
-    // Syncing from a browser-only API (navigator.language): this can't be
-    // read during render without a server/client mismatch, so a one-off
-    // setState on mount is intentional here, not a missed derivation.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLanguage(getBrowserLanguage());
-  }, []);
+// The server picks the first language (a saved choice, else the browser's
+// Accept-Language; see layout.tsx), so the page never renders in English
+// and then flips to Spanish. A choice made here is saved in a cookie for
+// the next visit.
+export function LanguageProvider({
+  initial,
+  children,
+}: {
+  initial: Language;
+  children: ReactNode;
+}) {
+  const [language, setLanguageState] = useState<Language>(initial);
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    document.cookie = `lang=${lang}; path=/; max-age=31536000; samesite=lax`;
+  };
 
   // Update the HTML lang attribute when language changes
   useEffect(() => {

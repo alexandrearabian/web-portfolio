@@ -1,52 +1,62 @@
 export const translations = {
   en: {
     nav: {
+      home: "Home",
       about: "About",
       experience: "Experience",
-      projects: "Projects",
+      projects: "Work",
       contact: "Contact",
+      puzzle: "Puzzle",
+    },
+    puzzle: {
+      intro: "A short chess break. Mate in 2.",
+      prompt: "White to move. Mate in 2.",
+      wrong: "Not quite. Try another move.",
+      forced: "Black's only move. Now finish it.",
+      solved: "Checkmate. Smothered by its own pieces.",
+      reset: "Reset",
+      solution: "Show solution",
     },
     hero: {
-      greeting: "Hi, I'm",
-      role: "Fullstack developer · Open to work",
-      description:
-        "I build web apps end to end, from interface to database to cloud, and automate the manual work in between. Available for full-time roles and freelance projects.",
-      contactButton: "Let's talk",
-      downloadCvButton: "Download CV",
-      viewWorkButton: "See my work",
+      role: "Software Engineer in Barcelona",
+      line: "I like coding… and chess.",
+      hint: "Move the knight, or just scroll.",
+      knight: "Knight. Select it to show its moves",
+      cv: "Download CV",
+      email: "Email me",
     },
     about: {
-      title: "About me",
-      paragraph1:
-        "I've taken a platform from first commit to production as its only developer, shipped client projects as a freelancer, and cut a manual process's time by 95% through automation.",
-      paragraph2:
-        "I'm a computer engineer (UPM) who is just as comfortable owning a project alone as working inside a team. Having lived in several countries, I'm used to multilingual, remote collaboration, and I care about clear communication as much as clean code.",
-      skillGroups: {
-        programming: "Programming",
-        web: "Web & data",
+      title: "About",
+      lead: "Engineer who loves solving problems. Living in several countries and speaking different languages taught me to adapt and work with any team.",
+      skills: "Stack",
+      degree: "Computer Engineer",
+      photo: "Alex by the Thames in London",
+      groups: {
+        frontend: "Frontend",
+        backend: "Backend & data",
         cloud: "Cloud & tools",
         ai: "AI & automation",
       },
       aiSkills: [
         "AI-assisted development",
+        "Workflow automation",
         "API integration",
-        "Process automation",
       ],
-    },
-    languagesSpoken: {
-      title: "Languages I speak",
+      languagesTitle: "Languages",
       levels: {
-        native: "Native",
-        bilingual: "Bilingual",
-        advanced: "Advanced",
-        intermediate: "Intermediate",
+        native: "native",
+        bilingual: "bilingual",
+        advanced: "advanced",
+        intermediate: "intermediate",
+        basic: "basic",
       },
-      items: [
+      languages: [
         { name: "Spanish", level: "native" },
         { name: "English", level: "bilingual" },
         { name: "Portuguese", level: "advanced" },
         { name: "Armenian", level: "advanced" },
         { name: "French", level: "intermediate" },
+        { name: "Japanese", level: "basic" },
       ],
     },
     experience: {
@@ -55,127 +65,162 @@ export const translations = {
         {
           role: "Process optimization analyst",
           company: "Frigorífico Gorina",
-          period: "April 2026 - August 2026",
-          description:
-            "Built a desktop app in Python that extracts data from health PDFs and fills certificates automatically, cutting processing time by 95%.",
+          period: "Apr 2026 - Aug 2026",
+          summary: "Sole developer on the plant's health-certificate workflow.",
+          details: [
+            "Built a Python desktop app that reads health-permit PDFs and fills in the matching certificates, cutting loading and form-filling time by 95%.",
+            "Built a system to approve, look up and download certificates from standard templates. The department adopted it as its standard tool.",
+          ],
+          stack: ["Python", "Google Cloud", "Azure Functions", "GitHub"],
         },
         {
           role: "Fullstack developer",
           company: "Globalthy",
-          period: "April 2025 - April 2026",
-          description:
-            "Led a web platform from first commit to production as the only fullstack developer, using MySQL, REST APIs and AWS infrastructure.",
+          period: "Apr 2025 - Apr 2026",
+          summary:
+            "Took a web platform from scratch to production as its only fullstack developer.",
+          details: [
+            "Built the frontend and wired it to a MySQL database through REST APIs, with an authentication system.",
+            "Deployed it on AWS with Docker, working in Agile sprints.",
+          ],
+          stack: ["MySQL", "REST APIs", "AWS", "Docker", "GitHub"],
         },
         {
           role: "Freelance developer",
           company: "Independent",
-          period: "May 2024 - April 2025",
-          description:
-            "Designed and built three client projects across different industries, from a theater platform to an e-commerce store, using PostgreSQL and Firebase.",
+          period: "May 2024 - Apr 2025",
+          summary: "Designed and delivered three web projects for clients.",
+          details: [
+            "An institutional platform for a theatre, a landing page for a consultancy and an online shop for an arts venture.",
+            "Picked PostgreSQL or Firebase to fit each project, and handled design and delivery myself.",
+          ],
+          stack: ["PostgreSQL", "Firebase", "GitHub"],
         },
         {
           role: "Fullstack trainee",
           company: "Globant",
-          period: "February 2024 - May 2024",
-          description:
-            "Helped a multilingual team build an internal platform that replaced a manual process for handling unassigned client accounts.",
+          period: "Feb 2024 - May 2024",
+          summary: "Joined a multilingual team building an internal platform.",
+          details: [
+            "Worked in English, Portuguese and Spanish on a JavaScript and TypeScript app that centralised unassigned-client users and replaced a manual process.",
+          ],
+          stack: ["JavaScript", "TypeScript", "Agile", "GitHub"],
         },
       ],
       education: {
         title: "Education",
         items: [
           {
-            degree: "Computer engineering degree",
+            degree: "Computer Engineering",
             school: "Universidad Politécnica de Madrid (UPM)",
             period: "2019 - 2024",
           },
           {
-            degree: "International Baccalaureate (IB)",
-            school: "SCMS, Buenos Aires",
+            degree: "International Baccalaureate",
+            school: "Saint Catherine's Moorlands School (SCMS), Buenos Aires",
             period: "2018",
           },
         ],
       },
     },
-    spotlight: {
-      line: "Five languages spoken. One goal: software that does its job.",
-    },
     projects: {
-      title: "Selected work",
+      title: "Work",
+      intro: "A collection of professional and personal projects.",
+      live: "Live site",
+      code: "Code",
       noRepos: "Projects coming soon.",
-      githubButton: "Source code",
-      viewProjectButton: "Visit live site",
-      noDescription: "No description yet.",
     },
     contact: {
-      title: "Let's work together",
-      description:
-        "Hiring for a developer role, or need a website, web app or automation built? Tell me about it and I'll get back to you.",
-      emailButton: "Email me",
-      emailCopied: "Email copied to clipboard",
-      linkedinButton: "Connect on LinkedIn",
-      location: "Based in Barcelona · Open to remote",
+      title: "Your move.",
+      body: "Always looking for new challenges. Let's talk.",
+      emailLabel: "Email",
+      copied: "Email copied to clipboard",
+      copy: "Copy email",
+      linkedin: "LinkedIn",
+      github: "GitHub",
+      cv: "Download CV",
+      location: "Barcelona · open to remote",
+      credit: "Chess pieces: cburnett by Colin M.L. Burnett, CC BY-SA 3.0",
+    },
+    rail: {
+      jump: "Jump to",
     },
     theme: {
       toggle: "Toggle dark mode",
     },
     footer: {
-      copyright: "Alexandre Arabian.",
+      title: "Let's talk.",
     },
     language: {
       toggle: "Change language",
       english: "English",
       spanish: "Spanish",
     },
+    notFound: {
+      eyebrow: "½–½",
+      title: "Stalemate.",
+      description: "There's no legal move to this page.",
+      backHome: "Back to the board",
+    },
   },
   es: {
     nav: {
+      home: "Inicio",
       about: "Sobre mí",
       experience: "Experiencia",
       projects: "Proyectos",
       contact: "Contacto",
+      puzzle: "Puzzle",
+    },
+    puzzle: {
+      intro: "Una pausa de ajedrez. Mate en 2.",
+      prompt: "Juegan blancas. Mate en 2.",
+      wrong: "Casi. Prueba otra jugada.",
+      forced: "La única jugada de las negras. Ahora remata.",
+      solved: "Jaque mate. Ahogado por sus propias piezas.",
+      reset: "Reiniciar",
+      solution: "Ver solución",
     },
     hero: {
-      greeting: "Hola, soy",
-      role: "Desarrollador fullstack · Disponible",
-      description:
-        "Construyo aplicaciones web de principio a fin, de la interfaz a la base de datos y la nube, y automatizo el trabajo manual que hay entre medias. Disponible para empleo a tiempo completo y proyectos freelance.",
-      contactButton: "Hablemos",
-      downloadCvButton: "Descargar CV",
-      viewWorkButton: "Ver mi trabajo",
+      role: "Ingeniero Informático en Barcelona",
+      line: "Me gusta programar… y el ajedrez.",
+      hint: "Mueva el caballo o deslice.",
+      knight: "Caballo. Selecciónalo para ver sus movimientos",
+      cv: "Descargar CV",
+      email: "Escribime",
     },
     about: {
       title: "Sobre mí",
-      paragraph1:
-        "He llevado una plataforma del primer commit a producción como único desarrollador, he entregado proyectos a clientes como freelance y he automatizado un proceso manual reduciendo su tiempo en un 95%.",
-      paragraph2:
-        "Soy ingeniero informático (UPM) y me siento igual de cómodo liderando un proyecto en solitario que trabajando en equipo. Después de vivir en varios países, estoy acostumbrado a colaborar en remoto y en varios idiomas, y cuido la comunicación tanto como el código.",
-      skillGroups: {
-        programming: "Programación",
-        web: "Web y datos",
+      lead: "Ingeniero apasionado por resolver problemas. Vivir en varios países y hablar distintos idiomas me enseñó a adaptarme y trabajar con cualquier equipo.",
+      skills: "Tecnologías",
+      degree: "Ingeniero Informático",
+      photo: "Alex junto al Támesis, en Londres",
+      groups: {
+        frontend: "Frontend",
+        backend: "Backend y datos",
         cloud: "Nube y herramientas",
         ai: "IA y automatización",
       },
       aiSkills: [
-        "Desarrollo con IA",
+        "Desarrollo asistido por IA",
+        "Automatización de flujos",
         "Integración de APIs",
-        "Automatización de procesos",
       ],
-    },
-    languagesSpoken: {
-      title: "Idiomas que hablo",
+      languagesTitle: "Idiomas",
       levels: {
-        native: "Nativo",
-        bilingual: "Bilingüe",
-        advanced: "Avanzado",
-        intermediate: "Intermedio",
+        native: "nativo",
+        bilingual: "bilingüe",
+        advanced: "avanzado",
+        intermediate: "intermedio",
+        basic: "básico",
       },
-      items: [
+      languages: [
         { name: "Español", level: "native" },
         { name: "Inglés", level: "bilingual" },
         { name: "Portugués", level: "advanced" },
         { name: "Armenio", level: "advanced" },
         { name: "Francés", level: "intermediate" },
+        { name: "Japonés", level: "basic" },
       ],
     },
     experience: {
@@ -184,158 +229,196 @@ export const translations = {
         {
           role: "Analista de optimización de procesos",
           company: "Frigorífico Gorina",
-          period: "Abril 2026 - Agosto 2026",
-          description:
-            "Implementé una app de escritorio en Python que extrae datos de PDFs sanitarios y genera certificados automáticamente, reduciendo un 95% el tiempo de carga.",
+          period: "abr 2026 - ago 2026",
+          summary:
+            "Único desarrollador del flujo de certificados sanitarios de la planta.",
+          details: [
+            "Desarrollé una app de escritorio en Python que lee los PDFs de permisos sanitarios y rellena los certificados correspondientes, reduciendo un 95% el tiempo de carga y de rellenado.",
+            "Desarrollé un sistema para aprobar, buscar y descargar certificados a partir de plantillas estándar. El departamento lo adoptó como su herramienta estándar.",
+          ],
+          stack: ["Python", "Google Cloud", "Azure Functions", "GitHub"],
         },
         {
           role: "Desarrollador fullstack",
           company: "Globalthy",
-          period: "Abril 2025 - Abril 2026",
-          description:
-            "Lideré una plataforma web de principio a fin como único desarrollador fullstack, usando MySQL, APIs REST e infraestructura en AWS.",
+          period: "abr 2025 - abr 2026",
+          summary:
+            "Llevé una plataforma web de cero a producción como su único desarrollador fullstack.",
+          details: [
+            "Construí el frontend y lo conecté a una base de datos MySQL mediante APIs REST, con un sistema de autenticación.",
+            "La desplegué en AWS con Docker, trabajando en sprints ágiles.",
+          ],
+          stack: ["MySQL", "APIs REST", "AWS", "Docker", "GitHub"],
         },
         {
           role: "Desarrollador freelance",
           company: "Independiente",
-          period: "Mayo 2024 - Abril 2025",
-          description:
-            "Diseñé e implementé tres proyectos para clientes de distintos sectores, desde una plataforma para un teatro hasta un e-commerce, usando PostgreSQL y Firebase.",
+          period: "may 2024 - abr 2025",
+          summary: "Diseñé y entregué tres proyectos web para clientes.",
+          details: [
+            "Una plataforma institucional para un teatro, una landing para una consultora y una tienda online para un proyecto artístico.",
+            "Elegí PostgreSQL o Firebase según cada proyecto, y me encargué del diseño y de la entrega.",
+          ],
+          stack: ["PostgreSQL", "Firebase", "GitHub"],
         },
         {
           role: "Fullstack trainee",
           company: "Globant",
-          period: "Febrero 2024 - Mayo 2024",
-          description:
-            "Colaboré en un equipo multilingüe en el desarrollo de una plataforma interna que reemplazó un proceso manual de gestión de clientes.",
+          period: "feb 2024 - may 2024",
+          summary:
+            "Me uní a un equipo multilingüe que construía una plataforma interna.",
+          details: [
+            "Trabajé en inglés, portugués y español en una app de JavaScript y TypeScript que centralizó la gestión de usuarios de clientes sin asignar y sustituyó un proceso manual.",
+          ],
+          stack: ["JavaScript", "TypeScript", "Agile", "GitHub"],
         },
       ],
       education: {
         title: "Formación",
         items: [
           {
-            degree: "Grado en Ingeniería Informática",
+            degree: "Ingeniería Informática",
             school: "Universidad Politécnica de Madrid (UPM)",
             period: "2019 - 2024",
           },
           {
-            degree: "Bachillerato Internacional (IB)",
-            school: "SCMS, Buenos Aires",
+            degree: "Bachillerato Internacional",
+            school: "Saint Catherine's Moorlands School (SCMS), Buenos Aires",
             period: "2018",
           },
         ],
       },
     },
-    spotlight: {
-      line: "Cinco idiomas. Un objetivo: software que cumple su función.",
-    },
     projects: {
-      title: "Trabajos destacados",
+      title: "Proyectos",
+      intro: "Una colección de proyectos profesionales y personales.",
+      live: "Ver web",
+      code: "Código",
       noRepos: "Próximamente.",
-      githubButton: "Código fuente",
-      viewProjectButton: "Ver web en vivo",
-      noDescription: "Sin descripción todavía.",
     },
     contact: {
-      title: "Trabajemos juntos",
-      description:
-        "¿Buscas un desarrollador para tu equipo, o necesitas una web, una aplicación o una automatización? Cuéntame qué tienes en mente y te respondo.",
-      emailButton: "Escríbeme",
-      emailCopied: "Email copiado al portapapeles",
-      linkedinButton: "Conecta en LinkedIn",
-      location: "En Barcelona · Disponible en remoto",
+      title: "Tu turno.",
+      body: "Siempre estoy buscando nuevos retos. Hablemos.",
+      emailLabel: "Email",
+      copied: "Email copiado al portapapeles",
+      copy: "Copiar email",
+      linkedin: "LinkedIn",
+      github: "GitHub",
+      cv: "Descargar CV",
+      location: "Barcelona · disponible en remoto",
+      credit:
+        "Piezas de ajedrez: cburnett, de Colin M.L. Burnett, CC BY-SA 3.0",
+    },
+    rail: {
+      jump: "Ir a",
     },
     theme: {
       toggle: "Cambiar modo oscuro",
     },
     footer: {
-      copyright: "Alexandre Arabian.",
+      title: "Hablemos.",
     },
     language: {
       toggle: "Cambiar idioma",
       english: "Inglés",
       spanish: "Español",
     },
+    notFound: {
+      eyebrow: "½–½",
+      title: "Tablas por ahogado.",
+      description: "Ningún movimiento legal lleva a esta página.",
+      backHome: "Volver al tablero",
+    },
   },
 } as const;
 
 export type Language = keyof typeof translations;
 
-type LangLevel = "native" | "bilingual" | "advanced" | "intermediate";
+type LangLevel = "native" | "bilingual" | "advanced" | "intermediate" | "basic";
+
+export type Role = {
+  role: string;
+  company: string;
+  period: string;
+  summary: string;
+  details: readonly string[];
+  stack: readonly string[];
+};
 
 type TranslationStructure = {
   nav: {
+    home: string;
     about: string;
     experience: string;
     projects: string;
     contact: string;
+    puzzle: string;
+  };
+  puzzle: {
+    intro: string;
+    prompt: string;
+    wrong: string;
+    forced: string;
+    solved: string;
+    reset: string;
+    solution: string;
   };
   hero: {
-    greeting: string;
     role: string;
-    description: string;
-    contactButton: string;
-    downloadCvButton: string;
-    viewWorkButton: string;
+    line: string;
+    hint: string;
+    knight: string;
+    cv: string;
+    email: string;
   };
   about: {
     title: string;
-    paragraph1: string;
-    paragraph2: string;
-    skillGroups: {
-      programming: string;
-      web: string;
-      cloud: string;
-      ai: string;
-    };
+    lead: string;
+    skills: string;
+    degree: string;
+    photo: string;
+    groups: { frontend: string; backend: string; cloud: string; ai: string };
     aiSkills: readonly string[];
-  };
-  languagesSpoken: {
-    title: string;
+    languagesTitle: string;
     levels: Record<LangLevel, string>;
-    items: readonly { name: string; level: LangLevel }[];
+    languages: readonly { name: string; level: LangLevel }[];
   };
   experience: {
     title: string;
-    roles: readonly {
-      role: string;
-      company: string;
-      period: string;
-      description: string;
-    }[];
+    roles: readonly Role[];
     education: {
       title: string;
       items: readonly { degree: string; school: string; period: string }[];
     };
   };
-  spotlight: {
-    line: string;
-  };
   projects: {
     title: string;
+    intro: string;
+    live: string;
+    code: string;
     noRepos: string;
-    githubButton: string;
-    viewProjectButton: string;
-    noDescription: string;
   };
   contact: {
     title: string;
-    description: string;
-    emailButton: string;
-    emailCopied: string;
-    linkedinButton: string;
+    body: string;
+    emailLabel: string;
+    copied: string;
+    copy: string;
+    linkedin: string;
+    github: string;
+    cv: string;
     location: string;
+    credit: string;
   };
-  theme: {
-    toggle: string;
-  };
-  footer: {
-    copyright: string;
-  };
-  language: {
-    toggle: string;
-    english: string;
-    spanish: string;
+  rail: { jump: string };
+  theme: { toggle: string };
+  footer: { title: string };
+  language: { toggle: string; english: string; spanish: string };
+  notFound: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    backHome: string;
   };
 };
 

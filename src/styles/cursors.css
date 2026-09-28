@@ -1,0 +1,36 @@
+/* Generated from src/lib/pieces.ts (the same cburnett pieces as ChessPiece).
+   An ink piece with a paper outline on the light theme, the inverse on the
+   dark one, so the cursor reads on any background. It promotes to a queen
+   over anything clickable. */
+:root {
+  --cursor-pawn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='-3 -1 51 51'%3E%3Cpath fill='%23faf6f0' stroke='%23faf6f0' stroke-linecap='round' stroke-width='6' d='M22.5 9a4 4 0 0 0-3.22 6.38 6.48 6.48 0 0 0-.87 10.65c-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47a6.46 6.46 0 0 0-.87-10.65A4.01 4.01 0 0 0 22.5 9z'/%3E%3Cpath fill='%232b1d12' stroke='%232b1d12' stroke-linecap='round' stroke-width='1.5' d='M22.5 9a4 4 0 0 0-3.22 6.38 6.48 6.48 0 0 0-.87 10.65c-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47a6.46 6.46 0 0 0-.87-10.65A4.01 4.01 0 0 0 22.5 9z'/%3E%3C/svg%3E") 16 16, auto;
+  --cursor-queen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='-3 -1 51 51'%3E%3Cg fill='%23faf6f0' fill-rule='evenodd' stroke='%23faf6f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='6'%3E%3Cg stroke='%23faf6f0'%3E%3Ccircle cx='6' cy='12' r='2.75'/%3E%3Ccircle cx='14' cy='9' r='2.75'/%3E%3Ccircle cx='22.5' cy='8' r='2.75'/%3E%3Ccircle cx='31' cy='9' r='2.75'/%3E%3Ccircle cx='39' cy='12' r='2.75'/%3E%3C/g%3E%3Cpath stroke-linecap='butt' d='M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5z'/%3E%3Cpath stroke-linecap='butt' d='M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z'/%3E%3Cpath fill='none' stroke-linecap='butt' d='M11 38.5a35 35 1 0 0 23 0'/%3E%3Cpath fill='none' style='stroke:%23faf6f0' d='M11 29a35 35 1 0 1 23 0m-21.5 2.5h20m-21 3a35 35 1 0 0 22 0m-23 3a35 35 1 0 0 24 0'/%3E%3C/g%3E%3Cg fill='%232b1d12' fill-rule='evenodd' stroke='%232b1d12' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cg stroke='none'%3E%3Ccircle cx='6' cy='12' r='2.75'/%3E%3Ccircle cx='14' cy='9' r='2.75'/%3E%3Ccircle cx='22.5' cy='8' r='2.75'/%3E%3Ccircle cx='31' cy='9' r='2.75'/%3E%3Ccircle cx='39' cy='12' r='2.75'/%3E%3C/g%3E%3Cpath stroke-linecap='butt' d='M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5z'/%3E%3Cpath stroke-linecap='butt' d='M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z'/%3E%3Cpath fill='none' stroke-linecap='butt' d='M11 38.5a35 35 1 0 0 23 0'/%3E%3Cpath fill='none' style='stroke:%23faf6f0' d='M11 29a35 35 1 0 1 23 0m-21.5 2.5h20m-21 3a35 35 1 0 0 22 0m-23 3a35 35 1 0 0 24 0'/%3E%3C/g%3E%3C/svg%3E") 16 16, pointer;
+}
+
+[data-theme="dark"] {
+  --cursor-pawn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='-3 -1 51 51'%3E%3Cpath fill='%232b1d12' stroke='%232b1d12' stroke-linecap='round' stroke-width='6' d='M22.5 9a4 4 0 0 0-3.22 6.38 6.48 6.48 0 0 0-.87 10.65c-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47a6.46 6.46 0 0 0-.87-10.65A4.01 4.01 0 0 0 22.5 9z'/%3E%3Cpath fill='%23faf6f0' stroke='%23faf6f0' stroke-linecap='round' stroke-width='1.5' d='M22.5 9a4 4 0 0 0-3.22 6.38 6.48 6.48 0 0 0-.87 10.65c-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47a6.46 6.46 0 0 0-.87-10.65A4.01 4.01 0 0 0 22.5 9z'/%3E%3C/svg%3E") 16 16, auto;
+  --cursor-queen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='-3 -1 51 51'%3E%3Cg fill='%232b1d12' fill-rule='evenodd' stroke='%232b1d12' stroke-linecap='round' stroke-linejoin='round' stroke-width='6'%3E%3Cg stroke='%232b1d12'%3E%3Ccircle cx='6' cy='12' r='2.75'/%3E%3Ccircle cx='14' cy='9' r='2.75'/%3E%3Ccircle cx='22.5' cy='8' r='2.75'/%3E%3Ccircle cx='31' cy='9' r='2.75'/%3E%3Ccircle cx='39' cy='12' r='2.75'/%3E%3C/g%3E%3Cpath stroke-linecap='butt' d='M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5z'/%3E%3Cpath stroke-linecap='butt' d='M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z'/%3E%3Cpath fill='none' stroke-linecap='butt' d='M11 38.5a35 35 1 0 0 23 0'/%3E%3Cpath fill='none' style='stroke:%232b1d12' d='M11 29a35 35 1 0 1 23 0m-21.5 2.5h20m-21 3a35 35 1 0 0 22 0m-23 3a35 35 1 0 0 24 0'/%3E%3C/g%3E%3Cg fill='%23faf6f0' fill-rule='evenodd' stroke='%23faf6f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cg stroke='none'%3E%3Ccircle cx='6' cy='12' r='2.75'/%3E%3Ccircle cx='14' cy='9' r='2.75'/%3E%3Ccircle cx='22.5' cy='8' r='2.75'/%3E%3Ccircle cx='31' cy='9' r='2.75'/%3E%3Ccircle cx='39' cy='12' r='2.75'/%3E%3C/g%3E%3Cpath stroke-linecap='butt' d='M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5z'/%3E%3Cpath stroke-linecap='butt' d='M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z'/%3E%3Cpath fill='none' stroke-linecap='butt' d='M11 38.5a35 35 1 0 0 23 0'/%3E%3Cpath fill='none' style='stroke:%232b1d12' d='M11 29a35 35 1 0 1 23 0m-21.5 2.5h20m-21 3a35 35 1 0 0 22 0m-23 3a35 35 1 0 0 24 0'/%3E%3C/g%3E%3C/svg%3E") 16 16, pointer;
+}
+
+@media (pointer: fine) {
+  *,
+  *::before,
+  *::after {
+    cursor: var(--cursor-pawn);
+  }
+
+  a,
+  a *,
+  a::before,
+  a::after,
+  button,
+  button *,
+  button::before,
+  button::after,
+  [role="button"],
+  [role="button"] *,
+  summary,
+  summary * {
+    cursor: var(--cursor-queen);
+  }
+}

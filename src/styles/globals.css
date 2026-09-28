@@ -1,109 +1,103 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./cursors.css";
 
-/* Theme is set on <html data-theme> by the toggle (see layout.tsx). */
+/* Theme is set on <html data-theme> by the toggle (see layout.tsx), so
+   `dark:` follows the site's toggle, not the OS setting. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --font-sans:
-    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: var(--font-instrument-serif), Georgia, serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono:
-    var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo,
-    monospace;
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --animate-drift: drift 22s ease-in-out infinite alternate;
-  @keyframes drift {
-    0% {
-      transform: translate(0, 0) scale(1);
+  /* The knight bobs on its square, waiting to be moved. */
+  --animate-bob: bob 1.6s ease-in-out infinite;
+  @keyframes bob {
+    50% {
+      transform: translateY(-7%);
+    }
+  }
+
+  /* The section squares breathe: a light-wood layer over each one fades
+     in and out, softly at rest, more when the knight's moves are shown.
+     It animates a layer's opacity, not the square's colour: the CSS
+     pipeline drops color-mix() of variables inside keyframes, and the
+     square itself must never fade. */
+  --animate-breathe: breathe 3.4s ease-in-out infinite;
+  --animate-breathe-strong: breathe 1.3s ease-in-out infinite;
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0;
     }
     50% {
-      transform: translate(-6rem, 3rem) scale(1.12);
-    }
-    100% {
-      transform: translate(2rem, -4rem) scale(0.94);
+      opacity: var(--breathe, 0.16);
     }
   }
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand: var(--brand);
-  --color-brand-foreground: var(--brand-foreground);
-  --color-surface: var(--surface);
-  --color-surface-deep: var(--surface-deep);
-  --color-surface-brand: var(--surface-brand);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-destructive: var(--destructive);
+  --color-card: var(--card);
   --color-border: var(--border);
-  --color-ring: var(--ring);
+  --color-brass: var(--brass);
+  --color-accent: var(--accent);
+  --color-square-light: var(--square-light);
+  --color-square-dark: var(--square-dark);
+  --color-board-rim: var(--board-rim);
+  --color-board-edge: var(--board-edge);
+  --color-ring: var(--accent);
 }
 
 /*
-  Soft Structuralism: cool violet-white paper + one electric-indigo
-  accent (#4e2ef0). Every neutral shares the accent's 278° hue at a
-  whisper of chroma, so the page reads as one calibrated palette
-  rather than "gray site, blue button".
+  A white page; the wooden board supplies the colour. Sections, text and
+  details take their accents from the board's two woods: --accent (dark
+  wood, also used for text: 4.8:1 on white) and --brass (light wood, for
+  fills and markers). The dark theme dims the board's woods too.
 */
 :root {
-  --radius: 0.75rem;
-
-  --brand: oklch(0.492 0.264 278);
-  --brand-foreground: oklch(0.99 0.004 278);
-
-  --background: oklch(0.984 0.006 278);
-  --foreground: oklch(0.18 0.02 278);
-
-  --surface: oklch(0.962 0.012 278);
-  --surface-deep: oklch(0.945 0.017 278);
-  --surface-brand: color-mix(in oklch, var(--brand) 6%, var(--background));
-
-  --card: oklch(0.997 0.004 278);
-  --card-foreground: oklch(0.18 0.02 278);
-
-  --muted: oklch(0.96 0.01 278);
-  --muted-foreground: oklch(0.47 0.024 278);
-
-  --destructive: oklch(0.55 0.2 25);
-  --border: oklch(0.9 0.014 278);
-  --ring: oklch(0.492 0.264 278);
-
-  /* Top-edge sheen on cards and the nav pill. */
-  --highlight: oklch(1 0 0 / 0.75);
+  --background: #ffffff;
+  --card: #faf6f0;
+  --foreground: #2b1d12;
+  --muted-foreground: #6e5a48;
+  --border: rgb(43 29 18 / 0.12);
+  --accent: #8b6440;
+  --brass: #ddbf8e;
+  --square-light: #ddbf8e;
+  --square-dark: #8b6440;
+  --board-rim: #4a3121;
+  --board-edge: #2f1f13;
+  /* A section square under the pointer: the golden highlight of a
+     wooden board. */
+  --square-hover: #d6a95e;
+  --shadow: rgb(43 29 18 / 0.28);
+  --piece-detail: var(--background);
 
   color-scheme: light;
 }
 
-/* Dark: same 278° hue family. The brand is lifted so it reads on a dark
-   field, and its foreground flips to ink so filled buttons keep contrast. */
+/* Dark: a dark walnut page, cream text, the light wood as the accent. */
 [data-theme="dark"] {
-  --brand: oklch(0.68 0.19 278);
-  --brand-foreground: oklch(0.15 0.03 278);
-
-  --background: oklch(0.13 0.012 278);
-  --foreground: oklch(0.96 0.006 278);
-
-  --surface: oklch(0.165 0.016 278);
-  --surface-deep: oklch(0.19 0.02 278);
-
-  --card: oklch(0.2 0.018 278);
-  --card-foreground: oklch(0.96 0.006 278);
-
-  --muted: oklch(0.2 0.018 278);
-  --muted-foreground: oklch(0.7 0.02 278);
-
-  --border: oklch(1 0 0 / 0.1);
-  --ring: oklch(0.68 0.19 278);
-  --highlight: oklch(1 0 0 / 0.06);
+  --background: #16110d;
+  --card: #201913;
+  --foreground: #f3ebdf;
+  --muted-foreground: #bba995;
+  --border: rgb(243 235 223 / 0.12);
+  --accent: #ddbf8e;
+  --brass: #b88d5c;
+  --shadow: rgb(0 0 0 / 0.55);
+  /* The board under a dim lamp: both woods darker and quieter, and the
+     frame a lighter wood so the board still stands out from the page. */
+  --square-light: #a88b64;
+  --square-dark: #5e4430;
+  --board-rim: #423425;
+  --board-edge: #251c14;
+  --square-hover: #c29a58;
 
   color-scheme: dark;
 }
@@ -125,33 +119,16 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    /* One quiet bloom behind the hero. Sections carry their own fills. */
-    background-image: radial-gradient(
-      46rem 28rem at 92% -8%,
-      color-mix(in oklch, var(--brand) 13%, transparent),
-      transparent 70%
-    );
-    background-repeat: no-repeat;
-  }
-
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    pointer-events: none;
-    opacity: 0.04;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    @apply bg-background text-foreground font-sans;
   }
 
   ::selection {
-    background: var(--brand);
-    color: var(--brand-foreground);
+    background: var(--brass);
+    color: var(--background);
   }
 
   :focus-visible {
-    outline: 2px solid var(--brand);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 
@@ -166,7 +143,17 @@
   }
 
   section[id] {
-    scroll-margin-top: 6rem;
+    scroll-margin-top: 5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -177,5 +164,8 @@
   padding-inline: 1.25rem;
   @media (width >= 40rem) {
     padding-inline: 2rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
   }
 }
