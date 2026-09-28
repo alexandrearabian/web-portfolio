@@ -27,7 +27,7 @@ export const translations = {
     },
     about: {
       title: "About",
-      lead: "Engineer who loves solving problems. Living in several countries and speaking different languages taught me to adapt and work with any team.",
+      lead: "Engineer passionate about solving problems.\nLiving in several countries and speaking different languages taught me to adapt and work with any team.",
       skills: "Stack",
       degree: "Computer Engineer",
       photo: "Alex by the Thames in London",
@@ -191,7 +191,7 @@ export const translations = {
     },
     about: {
       title: "Sobre mí",
-      lead: "Ingeniero apasionado por resolver problemas. Vivir en varios países y hablar distintos idiomas me enseñó a adaptarme y trabajar con cualquier equipo.",
+      lead: "Ingeniero apasionado por resolver problemas.\nVivir en varios países y hablar distintos idiomas me enseñó a adaptarme y trabajar con cualquier equipo.",
       skills: "Tecnologías",
       degree: "Ingeniero Informático",
       photo: "Alex junto al Támesis, en Londres",

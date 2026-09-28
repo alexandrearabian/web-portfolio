@@ -531,18 +531,20 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
       <>
         <Heading piece="knight" title={t.about.title} />
         <div className="grid gap-10 md:grid-cols-12 md:items-center md:gap-12">
-          <div className="relative aspect-[4/5] w-full max-w-sm overflow-hidden rounded-md md:col-span-5 md:max-w-none">
+          <div className="relative aspect-[4/5] w-full max-w-sm overflow-hidden rounded-md md:col-span-4 md:max-w-none">
             <Image
               src="/about/alex.png"
               alt={t.about.photo}
               fill
               priority
-              sizes="(min-width: 768px) 40vw, 24rem"
+              sizes="(min-width: 768px) 30vw, 24rem"
               className="object-cover object-[50%_30%]"
             />
           </div>
-          <div className="md:col-span-7">
-            <p className="font-display text-[1.85rem] leading-[1.2] sm:text-[2.35rem] lg:text-[2.75rem]">
+          <div className="md:col-span-8">
+            {/* pre-line: the intro's "\n" is a line break. From md the size
+                follows the screen so its first sentence stays on one line. */}
+            <p className="font-display text-[1.85rem] leading-[1.2] whitespace-pre-line sm:text-[2.35rem] md:text-[clamp(1.6rem,3.3vw,2.5rem)]">
               {t.about.lead}
             </p>
             <div className="border-border mt-10 border-t pt-5">
