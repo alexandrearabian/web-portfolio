@@ -92,8 +92,10 @@ function RevealText({
 // A section is a room: only one is on the page at a time, below the
 // board's runway. It overlaps the runway's last screen, hidden, and shows
 // the moment the growing square has filled the screen (`revealed`),
-// rising in on top of it. At least a screen tall so the runway can always
-// be scrolled to its end.
+// rising in on top of it. Leaving mirrors the square: the board clips the
+// section to the shrinking square (knight-board.tsx), so the page folds
+// back into its square on the board. At least a screen tall so the runway
+// can always be scrolled to its end.
 function Section({
   id,
   revealed,
@@ -107,27 +109,39 @@ function Section({
   className?: string;
   children: React.ReactNode;
 }) {
+  // In: the section appears at once (its background matches the square
+  // that just filled the screen) and the content rises. Out: it stays as
+  // it is while the board folds it into the square, then hides, and the
+  // content resets so the rise plays again next time. No remount either
+  // way: rebuilding it mid-scroll made phones stutter.
+  const fold = 0.8; // s, longer than the board's way home
   return (
-    <section
+    <motion.section
       id={id}
-      className={cn(
-        "bg-background relative z-10 -mt-[100svh] flex min-h-[100svh] flex-col",
-        !revealed && "invisible",
-      )}
+      className="bg-background relative z-10 -mt-[100svh] flex min-h-[100svh] flex-col"
+      initial={{ opacity: 0, visibility: "hidden" }}
+      animate={
+        revealed
+          ? { opacity: 1, visibility: "visible" }
+          : { opacity: 0, transitionEnd: { visibility: "hidden" } }
+      }
+      transition={revealed ? { duration: 0 } : { duration: 0.01, delay: fold }}
     >
       <motion.div
-        // Starts just under the navbar, like any page. Rises in on each
-        // reveal and drops out at once when the board comes back (no
-        // remount: rebuilding it mid-scroll made phones stutter).
+        // Starts just under the navbar, like any page.
         className={cn("shell flex-1 pt-24 pb-28 md:pt-32 md:pb-36", className)}
         initial={{ opacity: 0, y: 48 }}
         animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 48 }}
-        transition={revealed ? { duration: 0.9, ease: EASE } : { duration: 0 }}
+        transition={
+          revealed
+            ? { duration: 0.9, ease: EASE }
+            : { duration: 0, delay: fold }
+        }
       >
         {children}
       </motion.div>
       {footer}
-    </section>
+    </motion.section>
   );
 }
 
@@ -191,31 +205,70 @@ function Tech({ items }: { items: readonly string[] }) {
   );
 }
 
-// One role: numeral, company and dates on the left; the role on the right.
-// Everything is shown; recruiters shouldn't have to open anything.
+// One line of an index set in big type: the word large on the left, the
+// detail small on the right, hairlines between lines. Hovering a line
+// lays the light-wood band across the whole page behind it (light wood in
+// either theme, so the text on it is always dark).
+function BigRow({
+  word,
+  children,
+}: {
+  word: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.li
+      // The list's heading tops the first line; no double hairline.
+      className="group border-border relative border-t transition-colors duration-300 first:border-t-0 hover:border-transparent hover:text-[#2b1d12] hover:[--muted-foreground:#5c4430] [&:hover+li]:border-transparent"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.7, ease: EASE }}
+    >
+      <div
+        aria-hidden
+        className="bg-square-light absolute inset-y-0 left-1/2 w-screen -translate-x-1/2 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      />
+      <div className="relative grid gap-3 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] sm:items-center sm:gap-10 md:py-6">
+        <p className="font-display text-[clamp(2.75rem,7vw,5.75rem)] leading-[0.9] transition-transform duration-300 group-hover:translate-x-2">
+          {word}
+        </p>
+        {/* Heavier on phones: stacked under a smaller big word, the
+            regular weight read too faint next to it. */}
+        <div className="leading-relaxed font-medium sm:font-normal">
+          {children}
+        </div>
+      </div>
+    </motion.li>
+  );
+}
+
+// One role, as a big-type line: the company large, with numeral, dates and
+// role; summary, details and tech beside it. Everything is shown;
+// recruiters shouldn't have to open anything.
 function RoleRow({ item, move }: { item: Role; move: number }) {
   return (
     <motion.li
-      className="border-border grid gap-5 border-t py-12 first:border-t-0 first:pt-0 md:grid-cols-[14rem_1fr] md:gap-14"
+      className="border-border grid gap-6 border-t py-10 first:border-t-0 first:pt-0 md:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-14"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
       transition={{ duration: 0.7, ease: EASE }}
     >
-      <div className="flex items-baseline gap-5 md:block">
-        <Numeral n={move} />
-        <div className="md:mt-4">
-          <p className="font-medium">{item.company}</p>
-          <p className="text-muted-foreground mt-1 text-sm tabular-nums">
+      <div>
+        <div className="flex items-baseline gap-4">
+          <Numeral n={move} className="text-2xl" />
+          <span className="text-muted-foreground text-sm tabular-nums">
             {item.period}
-          </p>
+          </span>
         </div>
-      </div>
-      <div className="max-w-[62ch]">
-        <h3 className="font-display text-3xl leading-[1.1] sm:text-4xl">
-          {item.role}
+        <h3 className="font-display mt-3 text-[clamp(2.5rem,6vw,4.75rem)] leading-[0.9]">
+          {item.company}
         </h3>
-        <p className="mt-4 text-lg leading-relaxed">{item.summary}</p>
+        <p className="mt-3 text-lg font-medium">{item.role}</p>
+      </div>
+      <div className="max-w-[62ch] lg:pt-9">
+        <p className="text-lg leading-relaxed">{item.summary}</p>
         <ul className="text-muted-foreground mt-5 space-y-3 leading-relaxed">
           {item.details.map((line) => (
             <li
@@ -237,7 +290,6 @@ function RoleRow({ item, move }: { item: Role; move: number }) {
 type Project = {
   key: number;
   name: string;
-  description: string;
   tags: string[];
   site: string | null;
   github: string;
@@ -300,9 +352,6 @@ function ProjectList({
                   className="object-cover"
                 />
               </div>
-              <p className="mt-3 max-w-[58ch] leading-relaxed">
-                {project.description}
-              </p>
               {project.tags.length > 0 && (
                 <div className="mt-3">
                   <Tech items={project.tags} />
@@ -337,8 +386,16 @@ function ProjectList({
         ))}
       </ol>
 
+      {/* The preview is a link to the site it shows. Hidden from assistive
+          tech and the tab order: each row already links to the same place. */}
       <aside aria-hidden className="hidden md:block">
-        <div className="bg-card border-border sticky top-28 overflow-hidden rounded-md border shadow-[0_30px_60px_-30px_var(--shadow)]">
+        <a
+          href={link(shown)}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={-1}
+          className="group bg-card border-border sticky top-28 block overflow-hidden rounded-md border shadow-[0_30px_60px_-30px_var(--shadow)] transition-[translate,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_36px_64px_-28px_var(--shadow)]"
+        >
           {/* Every image is stacked and preloaded; hovering crossfades. */}
           <div className="bg-border relative aspect-[1.91/1]">
             {projects.map((project, i) => (
@@ -358,16 +415,18 @@ function ProjectList({
               />
             ))}
           </div>
-          <div className="p-5">
-            <p className="text-muted-foreground text-xs tracking-wide uppercase">
-              {new URL(link(shown)).hostname.replace(/^www\./, "")}
-            </p>
-            <p className="font-display mt-1 text-2xl">{shown.name}</p>
-            <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-              {shown.description}
-            </p>
+          <div className="flex items-end justify-between gap-4 p-5">
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                {new URL(link(shown)).hostname.replace(/^www\./, "")}
+              </p>
+              <p className="font-display group-hover:text-accent mt-1 text-2xl transition-colors">
+                {shown.name}
+              </p>
+            </div>
+            <ArrowUpRight className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
-        </div>
+        </a>
       </aside>
     </div>
   );
@@ -393,6 +452,9 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
     });
   }, []);
 
+  // The degree, for About's first line (Education's first item).
+  const degree = t.experience.education.items[0]!;
+
   const skillGroups = [
     { key: "frontend", label: t.about.groups.frontend, items: SKILLS.frontend },
     { key: "backend", label: t.about.groups.backend, items: SKILLS.backend },
@@ -408,21 +470,20 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
         name: repo.name
           .replace(/[-_]+/g, " ")
           .replace(/\b\w/g, (c) => c.toUpperCase()),
-        description: repo.description ?? t.projects.noDescription,
         tags: repo.topics.length
           ? repo.topics.slice(0, 4)
           : repo.language
             ? [repo.language]
             : [],
-        // GitHub returns "" for an unset homepage, hence || not ??.
-        site: repo.homepage || null,
+        // Already a full URL or null (see normalizeSite in getRepos).
+        site: repo.homepage ?? null,
         github: repo.html_url,
         image:
           SHOTS[repo.name] ??
           repo.preview ??
           `https://opengraph.githubassets.com/1/${repo.owner.login}/${repo.name}`,
       })),
-    [repos, t],
+    [repos],
   );
 
   // LinkedIn, GitHub and the CV as quiet icon links: the footer's links,
@@ -464,65 +525,66 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
   );
 
   const rooms: Record<BoardSection["id"], React.ReactNode> = {
-    // A short pitch in the display serif, then the stack (set like a menu
-    // card), then languages and school.
+    // Photo, pitch and degree side by side; then the stack and languages
+    // as indexes in big type, one line per group and per language.
     about: (
       <>
         <Heading piece="knight" title={t.about.title} />
-        <p className="font-display max-w-[28ch] text-[1.85rem] leading-[1.2] sm:text-[2.35rem] lg:text-[2.75rem]">
-          {t.about.lead}
-        </p>
-
-        <div className="mt-16">
-          <h3 className="font-display text-3xl italic">{t.about.skills}</h3>
-          {/* Two columns even on a phone: four short lists read better
-              side by side than as one long column. */}
-          <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4 lg:gap-14">
-            {skillGroups.map((group) => (
-              <div key={group.key} className="border-border border-t pt-5">
-                <dt className="text-sm font-medium">{group.label}</dt>
-                <dd>
-                  <ul className="text-muted-foreground mt-3 space-y-1 text-[15px] sm:space-y-1.5 sm:text-base">
-                    {group.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-            ))}
-          </dl>
+        <div className="grid gap-10 md:grid-cols-12 md:items-center md:gap-12">
+          <div className="relative aspect-[4/5] w-full max-w-sm overflow-hidden rounded-md md:col-span-5 md:max-w-none">
+            <Image
+              src="/about/alex.png"
+              alt={t.about.photo}
+              fill
+              priority
+              sizes="(min-width: 768px) 40vw, 24rem"
+              className="object-cover object-[50%_30%]"
+            />
+          </div>
+          <div className="md:col-span-7">
+            <p className="font-display text-[1.85rem] leading-[1.2] sm:text-[2.35rem] lg:text-[2.75rem]">
+              {t.about.lead}
+            </p>
+            <div className="border-border mt-10 border-t pt-5">
+              <p className="text-muted-foreground text-sm">
+                {t.experience.education.title}
+              </p>
+              <p className="mt-2 text-lg font-medium">{t.about.degree}</p>
+              {/* The dates on their own line on phones. */}
+              <p className="text-muted-foreground mt-0.5">
+                {degree.school}
+                <span className="hidden md:inline">, </span>
+                <span className="block tabular-nums md:inline">
+                  {degree.period}
+                </span>
+              </p>
+            </div>
+          </div>
         </div>
 
-        <dl className="mt-16 grid gap-10 sm:grid-cols-2 lg:gap-14">
-          <div className="border-border border-t pt-5">
-            <dt className="text-muted-foreground text-sm">
-              {t.about.languagesTitle}
-            </dt>
-            <dd>
-              <ul className="mt-2 space-y-1.5">
-                {t.about.languages.map((item) => (
-                  <li
-                    key={item.name}
-                    className="flex items-baseline justify-between gap-4"
-                  >
-                    <span className="font-display text-2xl">{item.name}</span>
-                    <span className="text-muted-foreground text-sm">
-                      {t.about.levels[item.level]}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </dd>
-          </div>
-          <div className="border-border border-t pt-5">
-            <dt className="text-muted-foreground text-sm">
-              {t.experience.education.title}
-            </dt>
-            <dd className="font-display mt-2 text-2xl leading-snug">
-              {t.about.educationValue}
-            </dd>
-          </div>
-        </dl>
+        <h3 className="font-display mt-24 text-3xl italic">{t.about.skills}</h3>
+        <ul className="border-border mt-6 border-y">
+          {skillGroups.map((group) => (
+            <BigRow key={group.key} word={group.label}>
+              <p className="text-muted-foreground sm:text-right">
+                {group.items.join(", ")}
+              </p>
+            </BigRow>
+          ))}
+        </ul>
+
+        <h3 className="font-display mt-24 text-3xl italic">
+          {t.about.languagesTitle}
+        </h3>
+        <ul className="border-border mt-6 border-y">
+          {t.about.languages.map((item) => (
+            <BigRow key={item.name} word={item.name}>
+              <p className="text-muted-foreground sm:text-right">
+                {t.about.levels[item.level]}
+              </p>
+            </BigRow>
+          ))}
+        </ul>
       </>
     ),
     experience: (
@@ -593,6 +655,8 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             <div className="mt-2 flex items-center gap-4">
               <a
                 href={`mailto:${EMAIL}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={handleEmailClick}
                 className="font-display hover:text-accent min-w-0 truncate text-[clamp(1.6rem,5vw,3rem)] leading-tight underline decoration-current/20 decoration-1 underline-offset-[0.2em] transition-colors hover:decoration-current lg:text-[2.6rem]"
               >
@@ -640,6 +704,8 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
           </p>
           <a
             href={`mailto:${EMAIL}`}
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={handleEmailClick}
             className="hover:text-accent mt-3 inline-flex items-center gap-2 text-lg underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
           >
@@ -712,6 +778,8 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             </a>
             <a
               href={`mailto:${EMAIL}`}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={handleEmailClick}
               className="hover:text-accent inline-flex items-center gap-1 underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
             >

@@ -60,7 +60,7 @@ function Corners() {
 /*
   The opening screen: a 5×5 board seen at an angle, a knight in the
   middle and a section on each of four squares it can reach. The screen
-  is pinned while you scroll through 2.5 screens of "runway", and the
+  is pinned while you scroll through 2 screens of "runway", and the
   scroll position *is* the animation: the knight jumps to the active
   section's square and the square grows until it fills the screen as that
   section's background. Stop halfway and it stays halfway; scroll up and
@@ -212,10 +212,17 @@ export function KnightBoard({
         }),
       );
 
+      // The section is clipped to the square too, so leaving it folds the
+      // page back into its square (the intro in reverse). While the square
+      // fills the screen it's unclipped; once the square has closed, fully
+      // clipped.
+      const room = document.getElementById(sections[i]!.id);
       if (grow <= 0) {
         cover.style.visibility = "hidden";
+        if (room) room.style.clipPath = "inset(50%)";
         return;
       }
+      if (room && grow >= 1) room.style.clipPath = "";
       // The growing square: a layer clipped to the square's corners,
       // pulled out to the screen's corners.
       const e = easeInOut(grow);
@@ -226,15 +233,23 @@ export function KnightBoard({
         [w, h],
         [0, h],
       ];
-      const points = to.map(
+      const at = to.map(
         ([cx, cy], n) =>
-          `${lerp(cx, full[n]![0], e)}px ${lerp(cy, full[n]![1], e)}px`,
+          [lerp(cx, full[n]![0], e), lerp(cy, full[n]![1], e)] as const,
       );
+      const polygon = (dx: number, dy: number) =>
+        `polygon(${at.map(([x, y]) => `${x - dx}px ${y - dy}px`).join(",")})`;
       cover.style.visibility = "visible";
-      cover.style.clipPath = `polygon(${points.join(",")})`;
+      cover.style.clipPath = polygon(0, 0);
       // Dark wood while it grows, turning into the page as it fills it:
       // the section below sits on the page background.
       cover.style.backgroundColor = `color-mix(in oklch, var(--square-dark), var(--background) ${e ** 1.6 * 100}%)`;
+      if (room && grow < 1) {
+        // The same shape in the section's own coordinates (the pinned
+        // screen sits at the top of the viewport while this runs).
+        const box = room.getBoundingClientRect();
+        room.style.clipPath = polygon(box.left, box.top);
+      }
     },
     [sections, measure],
   );
@@ -270,6 +285,10 @@ export function KnightBoard({
     let raf = 0;
     let onBoard: boolean | undefined;
     let leaving = 0;
+    // How far into the section the page was (null on the board), and
+    // whether the window has been resized since the last frame.
+    let inRoom: number | null = null;
+    let resized = false;
     const frame = () => {
       raf = 0;
       const runway = runwayRef.current;
@@ -284,8 +303,26 @@ export function KnightBoard({
       // the finished square, and on the way back up it scrolls away
       // before the square starts shrinking, instead of at the first nudge.
       const hold = pinned.offsetHeight * 0.4;
+      // A resize (rotating a phone, dragging the window) changes the
+      // runway's length, which used to read as scrolling back out of the
+      // section and sent the page home. Keep the same place in the section
+      // instead.
+      if (resized && inRoom !== null) {
+        resized = false;
+        scrollTo({ top: length + inRoom, behavior: "instant" });
+      }
+      resized = false;
       const p = length > hold ? clamp(scrollY / (length - hold)) : 0;
+      inRoom = p === 1 ? scrollY - length : null;
+      const was = progress.current;
       progress.current = p;
+      // Only the knight's jump follows the scroll. Scrolling down, once it
+      // has landed the rest (sinking in, the square filling the screen)
+      // plays by itself and lands at the section's top. Scrolling back out
+      // of a section, once the square starts shrinking, the way home does
+      // too. Neither can be left halfway, or skipped with a big flick.
+      if (!busy.current && was === 1 && p < 1) void retreat(p);
+      else if (!busy.current && p > was && p >= HOP && p < 1) void advance(p);
       if (!busy.current) {
         // Back on the board: scrolling down leads to About again.
         if (p === 0 && active.current !== 0)
@@ -308,13 +345,70 @@ export function KnightBoard({
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(frame);
     };
+    // Scroll input is watched (not blocked) so the automatic steps can wait
+    // for a flick's momentum to die out before handing scrolling back:
+    // otherwise it carries straight on, through the section or back down.
+    let lastInput = 0;
+    const onInput = () => (lastInput = performance.now());
+    const inputSettled = () =>
+      new Promise<void>((resolve) => {
+        const start = performance.now();
+        const check = () => {
+          const now = performance.now();
+          if (now - lastInput > 200 || now - start > 700) resolve();
+          else setTimeout(check, 80);
+        };
+        check();
+      });
+    // Plays the move from `from` to `to` over time with scrolling locked,
+    // lands the page at `top`, and unlocks once input has gone quiet.
+    const autoplay = async (
+      from: number,
+      to: number,
+      duration: number,
+      top: () => number,
+    ) => {
+      busy.current = true;
+      const root = document.documentElement;
+      root.style.overflow = "hidden";
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      await animate(from, to, {
+        duration: reduce ? 0 : duration,
+        ease: "linear",
+        onUpdate: (t) => paint(active.current, t),
+      });
+      scrollTo({ top: top(), behavior: "instant" });
+      await inputSettled();
+      root.style.overflow = "";
+      busy.current = false;
+      schedule();
+    };
+    // Into the section: the knight sinks in, the square fills the screen,
+    // the page lands at the section's top (whose background it becomes).
+    const advance = (from: number) =>
+      autoplay(from, 1, 0.15 + (1 - from) * 0.6, () => {
+        const section = document.getElementById(sections[active.current]!.id);
+        return section?.offsetTop ?? 0;
+      });
+    // Home: the square closes back into its square, the knight hops back
+    // to the centre, the page lands on the board.
+    const retreat = (from: number) =>
+      autoplay(from, 0, 0.15 + from * 0.55, () => 0);
     const remeasure = () => {
       geometry.current = null;
       schedule();
     };
+    const onResize = () => {
+      resized = true;
+      remeasure();
+    };
     schedule();
     addEventListener("scroll", schedule, { passive: true });
-    addEventListener("resize", remeasure);
+    addEventListener("resize", onResize);
+    const inputs = ["wheel", "touchmove", "keydown"] as const;
+    inputs.forEach((type) =>
+      addEventListener(type, onInput, { passive: true }),
+    );
     // The board slides in and fonts settle after mount: keep measuring
     // while that happens.
     const ro = new ResizeObserver(remeasure);
@@ -327,13 +421,14 @@ export function KnightBoard({
     return () => {
       cancelAnimationFrame(raf);
       removeEventListener("scroll", schedule);
-      removeEventListener("resize", remeasure);
+      removeEventListener("resize", onResize);
+      inputs.forEach((type) => removeEventListener(type, onInput));
       ro.disconnect();
       clearInterval(settle);
       clearTimeout(stopSettling);
       clearTimeout(leaving);
     };
-  }, [paint, onBoardChange, onActiveChange, arrive, leave]);
+  }, [paint, sections, onBoardChange, onActiveChange, arrive, leave]);
 
   // A click or a drop: the same frames, played over time, then straight
   // to the section (whose background the square has just become). Works
@@ -475,19 +570,21 @@ export function KnightBoard({
     <div
       ref={runwayRef}
       className="relative [&[data-idle]_*]:[animation-play-state:paused]"
-      // Two and a half screens of scroll play the whole move (see -mt on
-      // the section): enough distance that a flick doesn't fly straight
-      // past it into the section.
-      style={{ height: "350svh" }}
+      // Two screens of scroll play the whole move (see -mt on the
+      // section): enough distance that a flick doesn't fly straight past
+      // it into the section.
+      style={{ height: "300svh" }}
       onKeyDown={(e) => {
         if (e.key === "Escape") setSelected(false);
       }}
     >
       <div
         // Mobile stacks everything, weighted upwards (more padding below)
-        // so the board sits at the screen's centre; from md the text sits
-        // in the top-left corner and the board takes the middle.
-        className="sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-6 overflow-hidden px-4 pt-14 pb-32 [--board:min(84vw,calc((100svh-24rem)*1.4),32rem)] md:pt-14 md:pb-16 md:[--board:min(48vw,calc((100svh-9rem)*1.4),46rem)] lg:[--board:min(54vw,calc((100svh-9rem)*1.4),46rem)]"
+        // so the board sits at the screen's centre, nearly full width (its
+        // near edge, wider in perspective, keeps a few pixels' margin); from
+        // md the text sits in the top-left corner and the board takes the
+        // middle.
+        className="sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-6 overflow-hidden px-4 pt-14 pb-32 [--board:min(91vw,calc((100svh-24rem)*1.4),34rem)] md:pt-14 md:pb-16 md:[--board:min(48vw,calc((100svh-9rem)*1.4),46rem)] lg:[--board:min(54vw,calc((100svh-9rem)*1.4),46rem)]"
         style={
           {
             "--sq": "calc(var(--board) * 0.184)",
@@ -617,8 +714,8 @@ export function KnightBoard({
                         ref={(el) => {
                           labelRefs.current[i] = el;
                         }}
-                        // White pills in both themes: they sit on the wooden board,
-                        // which doesn't change with the theme.
+                        // White pills in both themes: they sit on the wooden
+                        // board, which stays wood-coloured either way.
                         className="absolute bottom-0 left-0 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/95 py-1 pr-3 pl-1.5 text-xs font-medium whitespace-nowrap text-[#2b1d12] shadow-[0_6px_16px_-8px_rgb(0_0_0/0.45)] ring-[var(--square-hover)] transition-[translate,scale,box-shadow] duration-300 group-hover:-translate-y-2 group-hover:scale-110 group-hover:ring-2 sm:text-sm md:gap-1.5 md:py-1.5 md:pr-4 md:pl-2 md:text-base"
                       >
                         <ChessPiece

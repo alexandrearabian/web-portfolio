@@ -65,7 +65,10 @@ export default async function RootLayout({
           {themeScript}
         </Script>
       </head>
-      <body className="overflow-x-hidden" suppressHydrationWarning>
+      {/* overflow-x: clip, not hidden: `hidden` turns <body> into a scroll
+          container as soon as <html> stops scrolling (the board locks it
+          during its moves), and the pinned board then jumps off-screen. */}
+      <body className="overflow-x-clip" suppressHydrationWarning>
         <a
           href="#main"
           className="bg-foreground text-background sr-only z-[60] px-4 py-2 text-sm focus:not-sr-only focus:fixed focus:top-4 focus:left-4"

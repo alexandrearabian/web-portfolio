@@ -9,8 +9,7 @@ export const translations = {
       puzzle: "Puzzle",
     },
     puzzle: {
-      intro:
-        "A short chess break. Find the smothered mate: a king trapped by its own pieces.",
+      intro: "A short chess break. Mate in 2.",
       prompt: "White to move. Mate in 2.",
       wrong: "Not quite. Try another move.",
       forced: "Black's only move. Now finish it.",
@@ -28,9 +27,10 @@ export const translations = {
     },
     about: {
       title: "About",
-      lead: "Computer engineer who loves solving problems. Years abroad and five languages taught me to adapt and work with any team.",
+      lead: "Engineer who loves solving problems. Living in several countries and speaking different languages taught me to adapt and work with any team.",
       skills: "Stack",
-      educationValue: "Computer Engineering, UPM Madrid",
+      degree: "Computer Engineer",
+      photo: "Alex by the Thames in London",
       groups: {
         frontend: "Frontend",
         backend: "Backend & data",
@@ -48,6 +48,7 @@ export const translations = {
         bilingual: "bilingual",
         advanced: "advanced",
         intermediate: "intermediate",
+        basic: "basic",
       },
       languages: [
         { name: "Spanish", level: "native" },
@@ -55,6 +56,7 @@ export const translations = {
         { name: "Portuguese", level: "advanced" },
         { name: "Armenian", level: "advanced" },
         { name: "French", level: "intermediate" },
+        { name: "Japanese", level: "basic" },
       ],
     },
     experience: {
@@ -109,13 +111,13 @@ export const translations = {
         title: "Education",
         items: [
           {
-            degree: "Computer engineering degree",
+            degree: "Computer Engineering",
             school: "Universidad Politécnica de Madrid (UPM)",
             period: "2019 - 2024",
           },
           {
             degree: "International Baccalaureate",
-            school: "SCMS, Buenos Aires",
+            school: "Saint Catherine's Moorlands School (SCMS), Buenos Aires",
             period: "2018",
           },
         ],
@@ -123,23 +125,21 @@ export const translations = {
     },
     projects: {
       title: "Work",
-      intro:
-        "Things I've built, loaded from my GitHub each time you open the page.",
+      intro: "A collection of professional and personal projects.",
       live: "Live site",
       code: "Code",
       noRepos: "Projects coming soon.",
-      noDescription: "No description yet.",
     },
     contact: {
       title: "Your move.",
-      body: "Hiring for a developer role, or need a site, web app or automation built? Send me a few lines about it and I'll get back to you.",
+      body: "Always looking for new challenges. Let's talk.",
       emailLabel: "Email",
       copied: "Email copied to clipboard",
       copy: "Copy email",
       linkedin: "LinkedIn",
       github: "GitHub",
       cv: "Download CV",
-      location: "Barcelona, Spain · open to remote",
+      location: "Barcelona · open to remote",
       credit: "Chess pieces: cburnett by Colin M.L. Burnett, CC BY-SA 3.0",
     },
     rail: {
@@ -149,7 +149,7 @@ export const translations = {
       toggle: "Toggle dark mode",
     },
     footer: {
-      title: "Open to new roles. Let's talk.",
+      title: "Let's talk.",
     },
     language: {
       toggle: "Change language",
@@ -173,8 +173,7 @@ export const translations = {
       puzzle: "Puzzle",
     },
     puzzle: {
-      intro:
-        "Una pausa de ajedrez. Encuentra el mate de la coz: un rey atrapado por sus propias piezas.",
+      intro: "Una pausa de ajedrez. Mate en 2.",
       prompt: "Juegan blancas. Mate en 2.",
       wrong: "Casi. Prueba otra jugada.",
       forced: "La única jugada de las negras. Ahora remata.",
@@ -185,16 +184,17 @@ export const translations = {
     hero: {
       role: "Ingeniero Informático en Barcelona",
       line: "Me gusta programar… y el ajedrez.",
-      hint: "Mueve el caballo o haz scroll.",
+      hint: "Mueva el caballo o deslice.",
       knight: "Caballo. Selecciónalo para ver sus movimientos",
       cv: "Descargar CV",
-      email: "Escríbeme",
+      email: "Escribime",
     },
     about: {
       title: "Sobre mí",
-      lead: "Ingeniero Informático apasionado por resolver problemas. Vivir en varios países y hablar cinco idiomas me enseñó a adaptarme y trabajar con cualquier equipo.",
+      lead: "Ingeniero apasionado por resolver problemas. Vivir en varios países y hablar distintos idiomas me enseñó a adaptarme y trabajar con cualquier equipo.",
       skills: "Tecnologías",
-      educationValue: "Ingeniería Informática, UPM Madrid",
+      degree: "Ingeniero Informático",
+      photo: "Alex junto al Támesis, en Londres",
       groups: {
         frontend: "Frontend",
         backend: "Backend y datos",
@@ -212,6 +212,7 @@ export const translations = {
         bilingual: "bilingüe",
         advanced: "avanzado",
         intermediate: "intermedio",
+        basic: "básico",
       },
       languages: [
         { name: "Español", level: "native" },
@@ -219,6 +220,7 @@ export const translations = {
         { name: "Portugués", level: "advanced" },
         { name: "Armenio", level: "advanced" },
         { name: "Francés", level: "intermediate" },
+        { name: "Japonés", level: "basic" },
       ],
     },
     experience: {
@@ -275,13 +277,13 @@ export const translations = {
         title: "Formación",
         items: [
           {
-            degree: "Grado en Ingeniería Informática",
+            degree: "Ingeniería Informática",
             school: "Universidad Politécnica de Madrid (UPM)",
             period: "2019 - 2024",
           },
           {
             degree: "Bachillerato Internacional",
-            school: "SCMS, Buenos Aires",
+            school: "Saint Catherine's Moorlands School (SCMS), Buenos Aires",
             period: "2018",
           },
         ],
@@ -289,16 +291,14 @@ export const translations = {
     },
     projects: {
       title: "Proyectos",
-      intro:
-        "Lo que he construido, cargado desde mi GitHub cada vez que abres la página.",
+      intro: "Una colección de proyectos profesionales y personales.",
       live: "Ver web",
       code: "Código",
       noRepos: "Próximamente.",
-      noDescription: "Sin descripción todavía.",
     },
     contact: {
-      title: "Tu jugada.",
-      body: "¿Buscas un desarrollador para tu equipo, o necesitas una web, una aplicación o una automatización? Escríbeme unas líneas y te respondo.",
+      title: "Tu turno.",
+      body: "Siempre estoy buscando nuevos retos. Hablemos.",
       emailLabel: "Email",
       copied: "Email copiado al portapapeles",
       copy: "Copiar email",
@@ -316,7 +316,7 @@ export const translations = {
       toggle: "Cambiar modo oscuro",
     },
     footer: {
-      title: "Abierto a nuevos retos. Hablemos.",
+      title: "Hablemos.",
     },
     language: {
       toggle: "Cambiar idioma",
@@ -334,7 +334,7 @@ export const translations = {
 
 export type Language = keyof typeof translations;
 
-type LangLevel = "native" | "bilingual" | "advanced" | "intermediate";
+type LangLevel = "native" | "bilingual" | "advanced" | "intermediate" | "basic";
 
 export type Role = {
   role: string;
@@ -375,7 +375,8 @@ type TranslationStructure = {
     title: string;
     lead: string;
     skills: string;
-    educationValue: string;
+    degree: string;
+    photo: string;
     groups: { frontend: string; backend: string; cloud: string; ai: string };
     aiSkills: readonly string[];
     languagesTitle: string;
@@ -396,7 +397,6 @@ type TranslationStructure = {
     live: string;
     code: string;
     noRepos: string;
-    noDescription: string;
   };
   contact: {
     title: string;

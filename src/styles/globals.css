@@ -58,7 +58,7 @@
   A white page; the wooden board supplies the colour. Sections, text and
   details take their accents from the board's two woods: --accent (dark
   wood, also used for text: 4.8:1 on white) and --brass (light wood, for
-  fills and markers). The board itself looks the same in both themes.
+  fills and markers). The dark theme dims the board's woods too.
 */
 :root {
   --background: #ffffff;
@@ -91,6 +91,13 @@
   --accent: #ddbf8e;
   --brass: #b88d5c;
   --shadow: rgb(0 0 0 / 0.55);
+  /* The board under a dim lamp: both woods darker and quieter, and the
+     frame a lighter wood so the board still stands out from the page. */
+  --square-light: #a88b64;
+  --square-dark: #5e4430;
+  --board-rim: #423425;
+  --board-edge: #251c14;
+  --square-hover: #c29a58;
 
   color-scheme: dark;
 }
