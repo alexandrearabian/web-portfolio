@@ -16,11 +16,12 @@ export const translations = {
       solved: "Checkmate. Smothered by its own pieces.",
       reset: "Reset",
       solution: "Show solution",
+      play: "Press to play",
     },
     hero: {
       role: "Software Engineer in Barcelona",
       line: "I like coding… and chess.",
-      hint: "Move the knight, or just scroll.",
+      hint: "Move the knight to a square.",
       knight: "Knight. Select it to show its moves",
       cv: "Download CV",
       email: "Email me",
@@ -180,11 +181,12 @@ export const translations = {
       solved: "Jaque mate. Ahogado por sus propias piezas.",
       reset: "Reiniciar",
       solution: "Ver solución",
+      play: "Tocá para jugar",
     },
     hero: {
       role: "Ingeniero Informático en Barcelona",
       line: "Me gusta programar… y el ajedrez.",
-      hint: "Mueva el caballo o deslice.",
+      hint: "Mueva el caballo a una casilla.",
       knight: "Caballo. Selecciónalo para ver sus movimientos",
       cv: "Descargar CV",
       email: "Escribime",
@@ -362,6 +364,7 @@ type TranslationStructure = {
     solved: string;
     reset: string;
     solution: string;
+    play: string;
   };
   hero: {
     role: string;

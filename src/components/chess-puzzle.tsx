@@ -116,6 +116,7 @@ export function ChessPuzzle() {
   const [status, setStatus] = useState<Status>("start");
   const [wrong, setWrong] = useState<string | null>(null);
   const [last, setLast] = useState<{ from: string; to: string } | null>(null);
+  const [armed, setArmed] = useState(false);
   const timers = useRef<number[]>([]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -192,11 +193,17 @@ export function ChessPuzzle() {
   };
 
   // Drag and drop: past a few pixels a white piece follows the pointer;
-  // letting go drops it on the square underneath.
+  // letting go drops it on the square underneath. The held piece's
+  // position is written straight to its element (pieceEls), so moving the
+  // pointer doesn't re-render the board; `drag` only marks the start and
+  // end of a drag, with where it started.
   const gridRef = useRef<HTMLDivElement>(null);
+  const pieceEls = useRef(new Map<string, HTMLDivElement>());
   const press = useRef<{ from: string; x: number; y: number } | null>(null);
   const dragged = useRef(false);
   const [drag, setDrag] = useState<{ from: string; x: number; y: number }>();
+  const heldAt = (x: number, y: number) =>
+    `translate(${x}px, ${y}px) translate(-50%, -50%) scale(1.1)`;
 
   const pointAt = (e: React.PointerEvent) => {
     const r = gridRef.current!.getBoundingClientRect();
@@ -216,13 +223,17 @@ export function ChessPuzzle() {
   const onPointerMove = (e: React.PointerEvent) => {
     const p = press.current;
     if (!p) return;
+    const { x, y } = pointAt(e);
     if (!dragged.current) {
       if (Math.hypot(e.clientX - p.x, e.clientY - p.y) < 5) return;
       dragged.current = true;
       setSelected(p.from);
+      setDrag({ from: p.from, x, y });
+      return;
     }
-    const { x, y } = pointAt(e);
-    setDrag({ from: p.from, x, y });
+    const id = pieces.find((q) => q.sq === p.from)?.id;
+    const el = id && pieceEls.current.get(id);
+    if (el) el.style.transform = heldAt(x, y);
   };
   const onPointerUp = (e: React.PointerEvent) => {
     const p = press.current;
@@ -236,6 +247,7 @@ export function ChessPuzzle() {
 
   const showSolution = () => {
     reset();
+    setArmed(true);
     later(() => whiteMoves(0), 400);
     later(() => whiteMoves(2), 1700);
   };
@@ -251,9 +263,22 @@ export function ChessPuzzle() {
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,34rem)_1fr] lg:gap-16">
       <div
-        className="border-board-rim relative aspect-square w-full border-[10px] shadow-[0_24px_48px_-24px_var(--shadow)] sm:border-[14px]"
+        className="border-board-rim relative aspect-square w-full border-[10px] shadow-[0_24px_48px_-24px_var(--shadow)] [-webkit-tap-highlight-color:transparent] sm:border-[14px]"
         style={{ backgroundColor: "var(--board-rim)" }}
       >
+        {/* Until "Press to play" is tapped the board takes no touches, so a
+            swipe across it scrolls the page like anywhere else. */}
+        {!armed && (
+          <button
+            type="button"
+            onClick={() => setArmed(true)}
+            className="group absolute inset-0 z-20 grid place-items-center bg-black/30 transition-colors hover:bg-black/20"
+          >
+            <span className="rounded-full bg-white px-6 py-3 text-sm font-medium text-[#2b1d12] shadow-[0_10px_30px_-10px_rgb(0_0_0/0.5)] transition-transform group-hover:scale-105 group-active:scale-95">
+              {t.puzzle.play}
+            </span>
+          </button>
+        )}
         <div
           ref={gridRef}
           onPointerDown={onPointerDown}
@@ -263,7 +288,10 @@ export function ChessPuzzle() {
             press.current = null;
             setDrag(undefined);
           }}
-          className="grid size-full grid-cols-8 grid-rows-8"
+          className={cn(
+            "grid size-full grid-cols-8 grid-rows-8",
+            !armed && "pointer-events-none",
+          )}
         >
           {Array.from({ length: 64 }, (_, n) => {
             const f = n % 8;
@@ -287,8 +315,9 @@ export function ChessPuzzle() {
                 className={cn(
                   "relative outline-none",
                   light ? "bg-square-light" : "bg-square-dark",
-                  // Only squares with a piece to drag stop touch scrolling.
-                  own && playing && "cursor-grab touch-none",
+                  // Once playing, only squares with a piece to drag stop
+                  // touch scrolling.
+                  armed && own && playing && "cursor-grab touch-none",
                 )}
               >
                 {highlight && (
@@ -331,8 +360,9 @@ export function ChessPuzzle() {
           })}
         </div>
 
-        {/* Pieces sit on top and slide between squares; the one being
-            dragged follows the pointer instead. */}
+        {/* Pieces sit on top and slide between squares (transforms: moving
+            left/top would cost a layout a frame); the one being dragged
+            follows the pointer instead. */}
         <div className="pointer-events-none absolute inset-0">
           {pieces.map((p) => {
             const [f, r] = coords(p.sq);
@@ -340,17 +370,22 @@ export function ChessPuzzle() {
             return (
               <div
                 key={p.id}
+                ref={(el) => {
+                  if (el) pieceEls.current.set(p.id, el);
+                  else pieceEls.current.delete(p.id);
+                }}
                 className={cn(
-                  "absolute size-[12.5%]",
+                  "absolute top-0 left-0 size-[12.5%]",
                   held
-                    ? "z-10 -translate-x-1/2 -translate-y-1/2 scale-110 drop-shadow-[0_10px_8px_rgb(0_0_0/0.35)]"
-                    : "transition-[left,top] duration-300 ease-out",
+                    ? "z-10 drop-shadow-[0_10px_8px_rgb(0_0_0/0.35)]"
+                    : "transition-transform duration-300 ease-out",
                 )}
-                style={
-                  held
-                    ? { left: drag.x, top: drag.y }
-                    : { left: `${f * 12.5}%`, top: `${(8 - r) * 12.5}%` }
-                }
+                style={{
+                  // Held: where the drag started; later moves via pieceEls.
+                  transform: held
+                    ? heldAt(drag.x, drag.y)
+                    : `translate(${f * 100}%, ${(8 - r) * 100}%)`,
+                }}
               >
                 <ChessPiece type={p.type} side={p.side} className="size-full" />
               </div>

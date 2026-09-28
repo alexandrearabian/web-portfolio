@@ -2,7 +2,6 @@
 
 import { animate } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown } from "lucide-react";
 import { useLanguage } from "~/contexts/LanguageContext";
 import { cn } from "~/lib/utils";
 import { ChessPiece, type PieceType } from "./chess-piece";
@@ -59,17 +58,15 @@ function Corners() {
 
 /*
   The opening screen: a 5×5 board seen at an angle, a knight in the
-  middle and a section on each of four squares it can reach. The screen
-  is pinned while you scroll through 2 screens of "runway", and the
-  scroll position *is* the animation: the knight jumps to the active
-  section's square and the square grows until it fills the screen as that
-  section's background. Stop halfway and it stays halfway; scroll up and
-  it plays backwards. Only one section is on the page at a time: About by
-  default, or whichever square was clicked (or had the knight dropped on
-  it), which plays the same frames over time and lands there. Back on the
-  board, the active section resets to About. The knight doesn't just
-  land: it drops into the square, as if through a trapdoor, and the
-  square opens out from there.
+  middle and a section on each of the squares it can reach. The board
+  doesn't scroll: clicking a square (or dropping the knight on one) makes
+  the move. The knight jumps, drops into the square as if through a
+  trapdoor, and the square grows until it fills the screen as that
+  section's background; the page then lands on the section, which sits
+  below a "runway" the board is pinned over. Only one section is on the
+  page at a time. Scrolling back up out of it plays the move in reverse
+  (the page folds back into its square, the knight hops home), as do Back
+  and the king.
 
   The knight itself is drawn flat, over the board, at the squares'
   projected positions: inside the 3D scene the browser's depth sorting
@@ -110,6 +107,9 @@ export function KnightBoard({
   const moveDotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const coverRef = useRef<HTMLDivElement>(null);
   const busy = useRef(false);
+  // Set while the way home plays: the section folds, the square needn't.
+  const folding = useRef(false);
+  const tintRef = useRef<HTMLDivElement>(null);
   const active = useRef(0);
   // How far the scroll has taken the move (0..1), for clicks mid-scroll.
   const progress = useRef(0);
@@ -199,10 +199,14 @@ export function KnightBoard({
       // clipped there, so it disappears into the square.
       const drop = sink * size * 0.92;
       const piece = pieceRef.current!;
-      piece.style.width = piece.style.height = `${size}px`;
+      // Its box keeps its size at home; the jump scales it (a transform,
+      // not a new width and height, which would cost a layout each frame).
+      const base = width(from) * 1.15;
+      const px = `${base}px`;
+      if (piece.style.width !== px) piece.style.width = piece.style.height = px;
       // Hidden until this first places it (see the button's classes).
       piece.style.visibility = "visible";
-      piece.style.transform = `translate(${x - ox - size / 2}px, ${foot - oy - size * 0.92 + drop}px)`;
+      piece.style.transform = `translate(${x - ox - size / 2}px, ${foot - oy - size * 0.92 + drop}px) scale(${size / base})`;
       piece.style.clipPath = sink > 0 ? `inset(0 0 ${8 + sink * 92}% 0)` : "";
       bobRef.current!.classList.toggle("animate-bob", t === 0);
       // The label and move dot of the square it's heading for make way.
@@ -212,17 +216,23 @@ export function KnightBoard({
         }),
       );
 
-      // The section is clipped to the square too, so leaving it folds the
-      // page back into its square (the intro in reverse). While the square
-      // fills the screen it's unclipped; once the square has closed, fully
-      // clipped.
+      // Leaving a section, the page as it was on screen shrinks into its
+      // square like a card (see the end of this function). Once the square
+      // has closed the section is hidden; while it fills the screen, it's
+      // left alone.
       const room = document.getElementById(sections[i]!.id);
       if (grow <= 0) {
         cover.style.visibility = "hidden";
         if (room) room.style.clipPath = "inset(50%)";
         return;
       }
-      if (room && grow >= 1) room.style.clipPath = "";
+      if (room && grow >= 1) {
+        const s = room.style;
+        s.clipPath = s.transform = s.transformOrigin = s.willChange = "";
+        s.opacity = "";
+        const tint = room.querySelector<HTMLElement>("[data-fold-tint]");
+        if (tint) tint.style.opacity = "";
+      }
       // The growing square: a layer clipped to the square's corners,
       // pulled out to the screen's corners.
       const e = easeInOut(grow);
@@ -239,16 +249,50 @@ export function KnightBoard({
       );
       const polygon = (dx: number, dy: number) =>
         `polygon(${at.map(([x, y]) => `${x - dx}px ${y - dy}px`).join(",")})`;
-      cover.style.visibility = "visible";
-      cover.style.clipPath = polygon(0, 0);
-      // Dark wood while it grows, turning into the page as it fills it:
-      // the section below sits on the page background.
-      cover.style.backgroundColor = `color-mix(in oklch, var(--square-dark), var(--background) ${e ** 1.6 * 100}%)`;
-      if (room && grow < 1) {
-        // The same shape in the section's own coordinates (the pinned
-        // screen sits at the top of the viewport while this runs).
-        const box = room.getBoundingClientRect();
-        room.style.clipPath = polygon(box.left, box.top);
+      if (folding.current) {
+        // Leaving a section: the board shows around the shrinking page, so
+        // the square isn't painted.
+        cover.style.visibility = "hidden";
+      } else {
+        cover.style.visibility = "visible";
+        cover.style.clipPath = polygon(0, 0);
+        // Dark wood while it grows, turning into the page as it fills it
+        // (the section below sits on the page background): a wood layer
+        // fading over the page colour, cheaper than a new colour a frame.
+        tintRef.current!.style.opacity = `${1 - e ** 1.6}`;
+      }
+      if (room && folding.current && grow < 1) {
+        // The card: the section clipped to what was on screen, with
+        // rounded corners, shrinking into the rectangle around its square
+        // while it turns the square's dark wood; there it dissolves,
+        // leaving the square. The clip stays put (scrolling is locked
+        // meanwhile); only scale and opacities change, which the GPU does
+        // on the card's own layer.
+        // The screen exactly as it was, in the section's own coordinates.
+        // When the section's top is below the screen's (it usually is:
+        // leaving starts a little above it), the clip reaches up over the
+        // page-coloured space the section keeps above itself.
+        const top = room.offsetTop - scrollY; // section's top on screen
+        const inside = [-top, room.offsetHeight - (h - top)];
+        const xs = to.map((q) => q[0]);
+        const ys = to.map((q) => q[1]);
+        const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
+        const [y0, y1] = [Math.min(...ys), Math.max(...ys)];
+        // Scale from the screen's size to the rectangle's about the one
+        // fixed point that maps the screen onto the rectangle, so the card
+        // travels straight in and lands exactly on it.
+        const sx = lerp((x1 - x0) / w, 1, e);
+        const sy = lerp((y1 - y0) / h, 1, e);
+        const originX = (x0 * w) / (w - (x1 - x0));
+        const originY = (y0 * h) / (h - (y1 - y0));
+        const s = room.style;
+        s.willChange = "transform";
+        s.clipPath = `inset(${inside[0]}px 0 ${inside[1]}px 0 round 28px)`;
+        s.transformOrigin = `${originX}px ${originY - top}px`;
+        s.transform = `scale(${sx}, ${sy})`;
+        s.opacity = `${clamp(e * 6)}`;
+        const tint = room.querySelector<HTMLElement>("[data-fold-tint]");
+        if (tint) tint.style.opacity = `${clamp((1 - e) * 1.6)}`;
       }
     },
     [sections, measure],
@@ -291,6 +335,7 @@ export function KnightBoard({
     let resized = false;
     const frame = () => {
       raf = 0;
+      const root = document.documentElement;
       const runway = runwayRef.current;
       const pinned = coverRef.current;
       if (!runway || !pinned) return;
@@ -316,15 +361,13 @@ export function KnightBoard({
       inRoom = p === 1 ? scrollY - length : null;
       const was = progress.current;
       progress.current = p;
-      // Only the knight's jump follows the scroll. Scrolling down, once it
-      // has landed the rest (sinking in, the square filling the screen)
-      // plays by itself and lands at the section's top. Scrolling back out
-      // of a section, once the square starts shrinking, the way home does
-      // too. Neither can be left halfway, or skipped with a big flick.
+      // Scrolling back out of a section: once the square starts shrinking,
+      // the way home plays by itself; it can't be left halfway.
       if (!busy.current && was === 1 && p < 1) void retreat(p);
-      else if (!busy.current && p > was && p >= HOP && p < 1) void advance(p);
       if (!busy.current) {
-        // Back on the board: scrolling down leads to About again.
+        // On the board the page doesn't scroll: sections open from the
+        // board itself (a click, or dropping the knight). See `block`.
+        root.style.overflow = p === 0 ? "hidden" : "";
         if (p === 0 && active.current !== 0)
           onActiveChange((active.current = 0));
         paint(active.current, p);
@@ -383,17 +426,15 @@ export function KnightBoard({
       busy.current = false;
       schedule();
     };
-    // Into the section: the knight sinks in, the square fills the screen,
-    // the page lands at the section's top (whose background it becomes).
-    const advance = (from: number) =>
-      autoplay(from, 1, 0.15 + (1 - from) * 0.6, () => {
-        const section = document.getElementById(sections[active.current]!.id);
-        return section?.offsetTop ?? 0;
-      });
     // Home: the square closes back into its square, the knight hops back
     // to the centre, the page lands on the board.
-    const retreat = (from: number) =>
-      autoplay(from, 0, 0.15 + from * 0.55, () => 0);
+    const retreat = async (from: number) => {
+      folding.current = true;
+      // The card is the screen exactly as it is (no scrolling first, which
+      // read as a jump).
+      await autoplay(from, 0, 0.3 + from * 0.6, () => 0);
+      folding.current = false;
+    };
     const remeasure = () => {
       geometry.current = null;
       schedule();
@@ -409,6 +450,32 @@ export function KnightBoard({
     inputs.forEach((type) =>
       addEventListener(type, onInput, { passive: true }),
     );
+    // Overflow hidden alone doesn't stop every phone from scrolling, so on
+    // the board scroll gestures and keys are cancelled too (taps, the
+    // knight's drag and typing are untouched).
+    const scrollKeys = [
+      " ",
+      "ArrowDown",
+      "ArrowUp",
+      "PageDown",
+      "PageUp",
+      "End",
+      "Home",
+    ];
+    const block = (e: Event) => {
+      if (busy.current || progress.current > 0) return;
+      if (e instanceof KeyboardEvent) {
+        const typing =
+          e.target instanceof HTMLElement &&
+          e.target.closest("input, textarea, button, a");
+        if (!scrollKeys.includes(e.key) || (typing && e.key === " ")) return;
+      }
+      e.preventDefault();
+    };
+    const blocked = ["wheel", "touchmove", "keydown"] as const;
+    blocked.forEach((type) =>
+      addEventListener(type, block, { passive: false }),
+    );
     // The board slides in and fonts settle after mount: keep measuring
     // while that happens.
     const ro = new ResizeObserver(remeasure);
@@ -423,6 +490,8 @@ export function KnightBoard({
       removeEventListener("scroll", schedule);
       removeEventListener("resize", onResize);
       inputs.forEach((type) => removeEventListener(type, onInput));
+      blocked.forEach((type) => removeEventListener(type, block));
+      document.documentElement.style.overflow = "";
       ro.disconnect();
       clearInterval(settle);
       clearTimeout(stopSettling);
@@ -613,10 +682,12 @@ export function KnightBoard({
               transform: `translate(-50%, -50%) rotateX(${TILT}deg)`,
             }}
           >
-            {/* Cast shadow and the front edge, facing the viewer. */}
+            {/* Cast shadow and the front edge, facing the viewer. The
+                shadow is a soft gradient, not a blur: a blur filter inside
+                a 3D scene is heavy for phone GPUs. */}
             <div
               aria-hidden
-              className="absolute inset-0 bg-black/35 blur-2xl"
+              className="absolute -inset-[8%] bg-[radial-gradient(closest-side,rgb(0_0_0/0.32),rgb(0_0_0/0.12)_70%,transparent)]"
               style={{
                 transform:
                   "translateZ(calc(var(--edge) * -1)) translate(0, 5%)",
@@ -769,7 +840,8 @@ export function KnightBoard({
             className={cn(
               // Hidden and sizeless until paint() places it: before that
               // the SVG would fall back to the browser's default 300x150.
-              "text-foreground invisible absolute top-0 left-0 size-0 touch-none outline-none",
+              // Scaled from its top-left by paint().
+              "text-foreground invisible absolute top-0 left-0 size-0 origin-top-left touch-none outline-none",
               ghost && "opacity-0",
             )}
           >
@@ -783,18 +855,21 @@ export function KnightBoard({
             box in perspective. */}
         <div className="mt-6 md:hidden">{actions}</div>
 
-        <p className="text-muted-foreground animate-in fade-in fill-mode-both flex items-center gap-2 text-sm duration-700 [animation-delay:1s] md:absolute md:right-8 md:bottom-8 lg:right-12">
-          <ArrowDown className="size-4 animate-bounce" />
+        <p className="text-muted-foreground animate-in fade-in fill-mode-both flex items-center gap-2 text-sm duration-700 [animation-delay:0.5s] md:absolute md:right-8 md:bottom-8 lg:right-12">
+          <ChessPiece type="knight" className="size-4" />
           {t.hero.hint}
         </p>
 
         {/* The growing square. It covers the board (and blocks it) while
-            visible. */}
+            visible: the page colour, with a dark-wood layer that paint()
+            fades out as it fills the screen. */}
         <div
           ref={coverRef}
           aria-hidden
-          className="invisible absolute inset-0 z-10"
-        />
+          className="bg-background invisible absolute inset-0 z-10"
+        >
+          <div ref={tintRef} className="bg-square-dark absolute inset-0" />
+        </div>
 
         {ghost && (
           <div

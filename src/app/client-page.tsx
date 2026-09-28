@@ -9,7 +9,7 @@ import { cn } from "~/lib/utils";
 import type { Role, TranslationKeys } from "~/lib/translations";
 import { ChessPiece, type PieceType } from "~/components/chess-piece";
 import { KnightBoard, type BoardSection } from "~/components/knight-board";
-import { ChessPuzzle } from "~/components/chess-puzzle";
+import dynamic from "next/dynamic";
 import {
   EnvelopeClosedIcon,
   GitHubLogoIcon,
@@ -17,6 +17,19 @@ import {
   LinkedInLogoIcon,
 } from "@radix-ui/react-icons";
 import type { Repo } from "./actions/getRepos";
+
+// The puzzle's code is only fetched when its section opens: most visits
+// never do, and it shouldn't weigh on the first load. Meanwhile, an empty
+// board-sized square.
+const ChessPuzzle = dynamic(
+  () => import("~/components/chess-puzzle").then((m) => m.ChessPuzzle),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-square-light/40 aspect-square w-full max-w-[34rem]" />
+    ),
+  },
+);
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 const EMAIL = "alexandre.arabian.j@gmail.com";
@@ -58,7 +71,8 @@ const SECTIONS: readonly BoardSection[] = [
   { id: "puzzle", piece: "pawn" },
 ];
 
-// Letters rise out of a clipped line, one after another.
+// Letters rise out of a clipped line, one after another. A CSS animation
+// (animate-rise), so it plays on first paint, before any JavaScript.
 function RevealText({
   text,
   delay,
@@ -74,15 +88,13 @@ function RevealText({
       aria-hidden
     >
       {text.split("").map((char, i) => (
-        <motion.span
+        <span
           key={i}
-          className="inline-block"
-          initial={{ y: "110%" }}
-          animate={{ y: 0 }}
-          transition={{ duration: 1, ease: EASE, delay: delay + i * 0.035 }}
+          className="animate-rise inline-block"
+          style={{ animationDelay: `${delay + i * 0.03}s` }}
         >
           {char}
-        </motion.span>
+        </span>
       ))}
       {children}
     </span>
@@ -130,17 +142,32 @@ function Section({
       <motion.div
         // Starts just under the navbar, like any page.
         className={cn("shell flex-1 pt-24 pb-28 md:pt-32 md:pb-36", className)}
-        initial={{ opacity: 0, y: 48 }}
-        animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 48 }}
+        initial={{ opacity: 0, y: 24 }}
+        animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
         transition={
           revealed
-            ? { duration: 0.9, ease: EASE }
+            ? { duration: 0.5, ease: EASE }
             : { duration: 0, delay: fold }
         }
       >
         {children}
       </motion.div>
       {footer}
+      {/* A screen of page colour above the section. Invisible in use (it
+          matches the full-screen square it sits over), but leaving a
+          section shrinks the screen exactly as it was, and that can
+          include this space above the section's top. */}
+      <div
+        aria-hidden
+        className="bg-background pointer-events-none absolute inset-x-0 bottom-full h-[100svh]"
+      />
+      {/* Leaving, the page turns into its square's dark wood as it shrinks
+          (knight-board.tsx fades this in). Covers that space too. */}
+      <div
+        data-fold-tint
+        aria-hidden
+        className="bg-square-dark pointer-events-none absolute inset-x-0 -top-[100svh] bottom-0 z-20 opacity-0"
+      />
     </motion.section>
   );
 }
@@ -163,12 +190,15 @@ function Heading({
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.6 }}
-      transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
+      transition={{ duration: 0.5, ease: EASE }}
     >
-      <h2 className="font-display flex items-end gap-[0.22em] text-[3.25rem] leading-[0.95] sm:text-7xl lg:text-[5.5rem]">
+      {/* Baseline-aligned: the piece's foot sits 12% above its box's
+          bottom, so pulling the box down by that much (-0.1em at 0.86em)
+          stands the piece on the title's baseline. */}
+      <h2 className="font-display flex items-baseline gap-[0.18em] text-[3.25rem] leading-[0.95] sm:text-7xl lg:text-[5.5rem]">
         <ChessPiece
           type={piece}
-          className="-mb-[0.06em] size-[0.86em] shrink-0"
+          className="-mb-[0.1em] size-[0.86em] shrink-0"
         />
         {title}
       </h2>
@@ -220,10 +250,10 @@ function BigRow({
     <motion.li
       // The list's heading tops the first line; no double hairline.
       className="group border-border relative border-t transition-colors duration-300 first:border-t-0 hover:border-transparent hover:text-[#2b1d12] hover:[--muted-foreground:#5c4430] [&:hover+li]:border-transparent"
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.7, ease: EASE }}
+      transition={{ duration: 0.45, ease: EASE }}
     >
       <div
         aria-hidden
@@ -250,10 +280,10 @@ function RoleRow({ item, move }: { item: Role; move: number }) {
   return (
     <motion.li
       className="border-border grid gap-6 border-t py-10 first:border-t-0 first:pt-0 md:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-14"
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.7, ease: EASE }}
+      transition={{ duration: 0.45, ease: EASE }}
     >
       <div>
         <div className="flex items-baseline gap-4">
@@ -319,10 +349,10 @@ function ProjectList({
             onMouseEnter={() => setActive(i)}
             onFocus={() => setActive(i)}
             className="group border-border relative grid grid-cols-[auto_1fr] gap-x-5 border-b py-8 first:pt-0 sm:gap-x-8"
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.7, ease: EASE }}
+            transition={{ duration: 0.45, ease: EASE }}
           >
             <Numeral n={i + 1} className="pt-0.5" />
             <div className="min-w-0">
@@ -536,7 +566,8 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
               src="/about/alex.png"
               alt={t.about.photo}
               fill
-              priority
+              // Not `priority`: About is hidden behind the board on first
+              // load, and the photo shouldn't compete with scripts and fonts.
               sizes="(min-width: 768px) 30vw, 24rem"
               className="object-cover object-[50%_30%]"
             />
@@ -738,37 +769,29 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
               aria-label="Alex"
               className="font-display text-[clamp(3.5rem,11svh,7rem)] leading-[0.9]"
             >
-              <RevealText text="Alex" delay={0.1}>
-                <motion.span
-                  className="text-brass inline-block"
-                  initial={{ y: "110%" }}
-                  animate={{ y: 0 }}
-                  transition={{ duration: 1, ease: EASE, delay: 0.3 }}
+              <RevealText text="Alex" delay={0.05}>
+                <span
+                  className="text-brass animate-rise inline-block"
+                  style={{ animationDelay: "0.2s" }}
                 >
                   .
-                </motion.span>
+                </span>
               </RevealText>
             </h1>
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: EASE, delay: 0.35 }}
-            >
+            <div className="animate-fade-up" style={{ animationDelay: "0.2s" }}>
               <p className="mt-2 text-lg font-medium sm:text-xl">
                 {t.hero.role}
               </p>
               <p className="text-muted-foreground mt-1 sm:text-lg">
                 {t.hero.line}
               </p>
-            </motion.div>
+            </div>
           </>
         }
         actions={
-          <motion.div
-            className="flex items-center justify-center gap-5 text-sm font-medium md:justify-start"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+          <div
+            className="animate-fade-up flex items-center justify-center gap-5 text-sm font-medium md:justify-start"
+            style={{ animationDelay: "0.35s" }}
           >
             <a
               href={cvHref}
@@ -788,7 +811,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
               {t.hero.email}
               <ArrowUpRight className="size-4" />
             </a>
-          </motion.div>
+          </div>
         }
       />
     ),
