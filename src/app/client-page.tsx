@@ -317,6 +317,11 @@ function RoleRow({ item, move }: { item: Role; move: number }) {
   );
 }
 
+// Project images start transparent and fade in once loaded, instead of
+// popping in as they arrive (see `data-[loaded]` on each).
+const markLoaded = (e: React.SyntheticEvent<HTMLImageElement>) =>
+  e.currentTarget.setAttribute("data-loaded", "");
+
 type Project = {
   key: number;
   name: string;
@@ -370,7 +375,7 @@ function ProjectList({
                 </a>
               </h3>
               {/* Mobile has no hover preview: a thumbnail instead. */}
-              <div className="relative mt-4 aspect-[1.91/1] overflow-hidden rounded-md md:hidden">
+              <div className="bg-border relative mt-4 aspect-[1.91/1] overflow-hidden rounded-md md:hidden">
                 <Image
                   src={project.image}
                   alt=""
@@ -379,7 +384,8 @@ function ProjectList({
                   // share images are shown as they are.
                   unoptimized={!project.image.startsWith("/")}
                   sizes="(min-width: 768px) 27rem, 100vw"
-                  className="object-cover"
+                  onLoad={markLoaded}
+                  className="object-cover opacity-0 transition-opacity duration-500 data-[loaded]:opacity-100"
                 />
               </div>
               {project.tags.length > 0 && (
@@ -438,9 +444,10 @@ function ProjectList({
                 // share images are shown as they are.
                 unoptimized={!project.image.startsWith("/")}
                 sizes="(min-width: 768px) 27rem, 100vw"
+                onLoad={markLoaded}
                 className={cn(
-                  "object-cover transition-opacity duration-500",
-                  i === active ? "opacity-100" : "opacity-0",
+                  "object-cover opacity-0 transition-opacity duration-500",
+                  i === active && "data-[loaded]:opacity-100",
                 )}
               />
             ))}

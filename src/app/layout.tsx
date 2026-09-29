@@ -7,6 +7,7 @@ import Script from "next/script";
 import { cookies, headers } from "next/headers";
 import type { Language } from "~/lib/translations";
 import { Navbar } from "~/components/navbar";
+import { Analytics } from "@vercel/analytics/next";
 
 // Runs before first paint so a saved dark theme never flashes light.
 // Light is the default; only an explicit choice switches.
@@ -81,6 +82,7 @@ export default async function RootLayout({
             <main id="main">{children}</main>
           </ThemeProvider>
         </LanguageProvider>
+	<Analytics/>
       </body>
     </html>
   );

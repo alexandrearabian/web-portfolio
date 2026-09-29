@@ -138,6 +138,8 @@ export function KnightBoard({
   // What was last drawn: scrolling through a section keeps the move at
   // its end, and repainting the full-screen cover for nothing is costly.
   const painted = useRef("");
+  // The running animations of the last card (see foldCard).
+  const cards = useRef<Animation[]>([]);
   const measure = useCallback((): Geometry | null => {
     const grid = gridRef.current;
     const cover = coverRef.current;
@@ -227,11 +229,11 @@ export function KnightBoard({
         return;
       }
       if (room && grow >= 1) {
+        // Back in (or never left): undo the last way out.
+        cards.current.forEach((a) => a.cancel());
+        cards.current = [];
         const s = room.style;
-        s.clipPath = s.transform = s.transformOrigin = s.willChange = "";
-        s.opacity = "";
-        const tint = room.querySelector<HTMLElement>("[data-fold-tint]");
-        if (tint) tint.style.opacity = "";
+        s.clipPath = s.transformOrigin = s.willChange = "";
       }
       // The growing square: a layer clipped to the square's corners,
       // pulled out to the screen's corners.
@@ -261,39 +263,70 @@ export function KnightBoard({
         // fading over the page colour, cheaper than a new colour a frame.
         tintRef.current!.style.opacity = `${1 - e ** 1.6}`;
       }
-      if (room && folding.current && grow < 1) {
-        // The card: the section clipped to what was on screen, with
-        // rounded corners, shrinking into the rectangle around its square
-        // while it turns the square's dark wood; there it dissolves,
-        // leaving the square. The clip stays put (scrolling is locked
-        // meanwhile); only scale and opacities change, which the GPU does
-        // on the card's own layer.
-        // The screen exactly as it was, in the section's own coordinates.
-        // When the section's top is below the screen's (it usually is:
-        // leaving starts a little above it), the clip reaches up over the
-        // page-coloured space the section keeps above itself.
-        const top = room.offsetTop - scrollY; // section's top on screen
-        const inside = [-top, room.offsetHeight - (h - top)];
-        const xs = to.map((q) => q[0]);
-        const ys = to.map((q) => q[1]);
-        const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
-        const [y0, y1] = [Math.min(...ys), Math.max(...ys)];
-        // Scale from the screen's size to the rectangle's about the one
-        // fixed point that maps the screen onto the rectangle, so the card
-        // travels straight in and lands exactly on it.
-        const sx = lerp((x1 - x0) / w, 1, e);
-        const sy = lerp((y1 - y0) / h, 1, e);
-        const originX = (x0 * w) / (w - (x1 - x0));
-        const originY = (y0 * h) / (h - (y1 - y0));
-        const s = room.style;
-        s.willChange = "transform";
-        s.clipPath = `inset(${inside[0]}px 0 ${inside[1]}px 0 round 28px)`;
-        s.transformOrigin = `${originX}px ${originY - top}px`;
-        s.transform = `scale(${sx}, ${sy})`;
-        s.opacity = `${clamp(e * 6)}`;
-        const tint = room.querySelector<HTMLElement>("[data-fold-tint]");
-        if (tint) tint.style.opacity = `${clamp((1 - e) * 1.6)}`;
+      // (Leaving a section, the page itself is animated by foldCard.)
+    },
+    [sections, measure],
+  );
+
+  // Leaving a section, the screen as it was becomes a card that shrinks
+  // into the rectangle around its square, turning the square's dark wood,
+  // and dissolves there. The whole animation is worked out once and handed
+  // to the browser (Web Animations), which runs it on the compositor: frame
+  // by frame from script, phones stuttered whenever the page was busy. It
+  // follows the same timeline as the way home: `from` down to 0 over
+  // `duration` seconds, the card living while the square is open.
+  const foldCard = useCallback(
+    (i: number, from: number, duration: number) => {
+      cards.current.forEach((a) => a.cancel());
+      cards.current = [];
+      const g = (geometry.current ??= measure());
+      const room = document.getElementById(sections[i]!.id);
+      const tint = room?.querySelector<HTMLElement>("[data-fold-tint]");
+      const open = HOP + SINK; // below this the square has closed
+      if (!g || !room || !tint || !g.spots[i]?.length || from <= open) return;
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const { w, h } = g;
+      const to = g.spots[i]!;
+
+      // The screen exactly as it is, in the section's own coordinates.
+      // When the section's top is below the screen's (it usually is:
+      // leaving starts a little above it), the clip reaches up over the
+      // page-coloured space the section keeps above itself.
+      const top = room.offsetTop - scrollY; // section's top on screen
+      const xs = to.map((q) => q[0]);
+      const ys = to.map((q) => q[1]);
+      const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
+      const [y0, y1] = [Math.min(...ys), Math.max(...ys)];
+      // Scaling about the one fixed point that maps the screen onto the
+      // rectangle makes the card travel straight in and land exactly on it.
+      const s = room.style;
+      s.clipPath = `inset(${-top}px 0 ${room.offsetHeight - (h - top)}px 0 round 28px)`;
+      s.transformOrigin = `${(x0 * w) / (w - (x1 - x0))}px ${
+        (y0 * h) / (h - (y1 - y0)) - top
+      }px`;
+      s.willChange = "transform";
+
+      // Sample the move's easing into keyframes: time τ runs the progress
+      // t linearly from `from` down to 0; the card lasts until t = open.
+      const span = duration * (1 - open / from);
+      const steps = 24;
+      const card: Keyframe[] = [];
+      const wood: Keyframe[] = [];
+      for (let k = 0; k <= steps; k++) {
+        const t = from * (1 - (span * k) / steps / duration);
+        const e = easeInOut(clamp((t - open) / (1 - open)));
+        card.push({
+          transform: `scale(${lerp((x1 - x0) / w, 1, e)}, ${lerp((y1 - y0) / h, 1, e)})`,
+          opacity: clamp(e * 6),
+        });
+        wood.push({ opacity: clamp((1 - e) * 1.6) });
       }
+      const timing = {
+        duration: span * 1000,
+        easing: "linear",
+        fill: "forwards",
+      } as const;
+      cards.current = [room.animate(card, timing), tint.animate(wood, timing)];
     },
     [sections, measure],
   );
@@ -333,6 +366,7 @@ export function KnightBoard({
     // whether the window has been resized since the last frame.
     let inRoom: number | null = null;
     let resized = false;
+    let lastLength = -1;
     const frame = () => {
       raf = 0;
       const root = document.documentElement;
@@ -352,11 +386,14 @@ export function KnightBoard({
       // runway's length, which used to read as scrolling back out of the
       // section and sent the page home. Keep the same place in the section
       // instead.
-      if (resized && inRoom !== null) {
-        resized = false;
+      // Only when the length really changed: on phones, starting to scroll
+      // hides the address bar, which fires a resize without changing the
+      // runway (it's in svh), and correcting then fought the finger.
+      if (resized && inRoom !== null && length !== lastLength) {
         scrollTo({ top: length + inRoom, behavior: "instant" });
       }
       resized = false;
+      lastLength = length;
       const p = length > hold ? clamp(scrollY / (length - hold)) : 0;
       inRoom = p === 1 ? scrollY - length : null;
       const was = progress.current;
@@ -430,9 +467,11 @@ export function KnightBoard({
     // to the centre, the page lands on the board.
     const retreat = async (from: number) => {
       folding.current = true;
+      const duration = 0.3 + from * 0.6;
       // The card is the screen exactly as it is (no scrolling first, which
-      // read as a jump).
-      await autoplay(from, 0, 0.3 + from * 0.6, () => 0);
+      // read as a jump), on the compositor; the knight follows in script.
+      foldCard(active.current, from, duration);
+      await autoplay(from, 0, duration, () => 0);
       folding.current = false;
     };
     const remeasure = () => {
@@ -497,7 +536,7 @@ export function KnightBoard({
       clearTimeout(stopSettling);
       clearTimeout(leaving);
     };
-  }, [paint, sections, onBoardChange, onActiveChange, arrive, leave]);
+  }, [paint, foldCard, sections, onBoardChange, onActiveChange, arrive, leave]);
 
   // A click or a drop: the same frames, played over time, then straight
   // to the section (whose background the square has just become). Works
