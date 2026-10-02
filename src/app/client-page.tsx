@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ArrowUpRight, Check, Copy, Download } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "~/contexts/LanguageContext";
 import { cn } from "~/lib/utils";
 import type { Role, TranslationKeys } from "~/lib/translations";
@@ -60,6 +60,7 @@ const SHOTS: Record<string, string> = {
   ayan: "/projects/ayan.png",
   flaminhotboi: "/projects/flaminhotboi.png",
   tadron: "/projects/tadron.png",
+  solara: "/projects/solara.jpg",
 };
 
 // Page order, and the piece beside each heading (and on its board square).
@@ -322,6 +323,33 @@ function RoleRow({ item, move }: { item: Role; move: number }) {
 const markLoaded = (e: React.SyntheticEvent<HTMLImageElement>) =>
   e.currentTarget.setAttribute("data-loaded", "");
 
+// Phone thumbnails. A CSS opacity transition never plays there: the
+// decoded frame is the first paint, so the picture pops in. An animation
+// always starts from its `from` keyframe.
+function MobileShot({ src }: { src: string }) {
+  const [shown, setShown] = useState(false);
+  const ref = useRef<HTMLImageElement>(null);
+  // A cached file can finish before `onLoad` is attached.
+  useEffect(() => {
+    const img = ref.current;
+    if (img?.complete && img.naturalWidth > 0) setShown(true);
+  }, []);
+  return (
+    <div className="bg-border relative mt-4 aspect-[1.91/1] overflow-hidden rounded-md md:hidden">
+      <Image
+        ref={ref}
+        src={src}
+        alt=""
+        fill
+        unoptimized={!src.startsWith("/")}
+        sizes="100vw"
+        onLoad={() => setShown(true)}
+        className={cn("object-cover", shown ? "animate-fade-up" : "opacity-0")}
+      />
+    </div>
+  );
+}
+
 type Project = {
   key: number;
   name: string;
@@ -342,8 +370,16 @@ function ProjectList({
   labels: TranslationKeys["projects"];
 }) {
   const [active, setActive] = useState(0);
+  const [armed, setArmed] = useState(false);
   const shown = projects[active]!;
   const link = (p: Project) => p.site ?? p.github;
+
+  // Paint the hidden state once before whileInView. On a phone the rows
+  // are already in view on mount, and Motion then skips the tween.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setArmed(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   return (
     <div className="grid gap-12 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-16">
@@ -355,9 +391,9 @@ function ProjectList({
             onFocus={() => setActive(i)}
             className="group border-border relative grid grid-cols-[auto_1fr] gap-x-5 border-b py-8 first:pt-0 sm:gap-x-8"
             initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.45, ease: EASE }}
+            whileInView={armed ? { opacity: 1, y: 0 } : undefined}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.6, ease: EASE }}
           >
             <Numeral n={i + 1} className="pt-0.5" />
             <div className="min-w-0">
@@ -375,19 +411,7 @@ function ProjectList({
                 </a>
               </h3>
               {/* Mobile has no hover preview: a thumbnail instead. */}
-              <div className="bg-border relative mt-4 aspect-[1.91/1] overflow-hidden rounded-md md:hidden">
-                <Image
-                  src={project.image}
-                  alt=""
-                  fill
-                  // Our own screenshots go through the optimiser; remote
-                  // share images are shown as they are.
-                  unoptimized={!project.image.startsWith("/")}
-                  sizes="(min-width: 768px) 27rem, 100vw"
-                  onLoad={markLoaded}
-                  className="object-cover opacity-0 transition-opacity duration-500 data-[loaded]:opacity-100"
-                />
-              </div>
+              <MobileShot src={project.image} />
               {project.tags.length > 0 && (
                 <div className="mt-3">
                   <Tech items={project.tags} />

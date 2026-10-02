@@ -14,8 +14,6 @@ const repoSchema = z.object({
   owner: z.object({ login: z.string() }),
 });
 
-const reposSchema = z.array(repoSchema);
-
 export type Repo = z.infer<typeof repoSchema> & {
   description: string | null;
   homepage?: string | null;
@@ -69,72 +67,66 @@ async function sharePreview(site: string): Promise<string | null> {
   return null;
 }
 
+const USER = "alexandrearabian";
+
+// GitHub has no REST API for profile pins. The public profile lists them
+// in pin order; each name is then loaded as a normal repo.
+function pinnedNames(html: string): string[] {
+  const block =
+    /js-pinned-items-reorder-list[\s\S]*?<\/ol>/.exec(html)?.[0] ?? "";
+  return [...block.matchAll(/class="repo"[^>]*>\s*([^<]+)/g)]
+    .map((match) => match[1]?.trim())
+    .filter((name): name is string => !!name && name !== "web-portfolio");
+}
+
 export async function getRepos(): Promise<Repo[]> {
   try {
     const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
-    const baseHeaders: HeadersInit = {
+    const headers: HeadersInit = {
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
       "User-Agent": "web-portfolio",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
+    // Cached for an hour: fetching on every visit ran into GitHub's
+    // rate limit and left the Work section empty.
+    const profile = await fetch(`https://github.com/${USER}`, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; web-portfolio)" },
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!profile.ok) return [];
 
-    const all: Repo[] = [];
-    const perPage = 100;
-    const maxPages = 10; // safety cap (up to 1000 starred repos)
-
-    for (let page = 1; page <= maxPages; page++) {
-      const url = `https://api.github.com/users/alexandrearabian/starred?per_page=${perPage}&page=${page}`;
-      const attempt = async (withAuth: boolean) => {
-        const headers: HeadersInit =
-          withAuth && token
-            ? { ...baseHeaders, Authorization: `token ${token}` }
-            : baseHeaders;
-        return await fetch(url, {
+    const loaded = await Promise.all(
+      pinnedNames(await profile.text()).map(async (name) => {
+        const res = await fetch(`https://api.github.com/repos/${USER}/${name}`, {
           headers,
-          // Cached for an hour: fetching on every visit ran into GitHub's
-          // rate limit (60/hour unauthenticated, shared by the host's
-          // servers) and left the Work section empty.
           next: { revalidate: 3600 },
           signal: AbortSignal.timeout(8000),
         });
-      };
-
-      let res = await attempt(true);
-      // If token is invalid/mis-scoped or triggers restrictions, fall back to unauthenticated.
-      if ((res.status === 401 || res.status === 403) && token) {
-        res = await attempt(false);
-      }
-
-      if (!res.ok) break;
-
-      const data: unknown = await res.json();
-      const parsed = reposSchema.safeParse(data);
-      if (!parsed.success) break;
-
-      for (const repo of parsed.data) {
-        all.push({
+        if (!res.ok) return null;
+        const parsed = repoSchema.safeParse(await res.json());
+        if (!parsed.success || parsed.data.private) return null;
+        const repo = parsed.data;
+        return {
           ...repo,
-          private: repo.private ?? false,
+          private: false as const,
           description: repo.description ?? null,
           homepage: normalizeSite(repo.homepage),
           language: repo.language ?? null,
           topics: repo.topics ?? [],
           preview: null,
-        });
-      }
-      // A short page is the last one; don't spend a request on an empty one.
-      if (parsed.data.length < perPage) break;
-    }
-
-    // Only public repos I own; stars on other people's projects are skipped.
-    const owned = all.filter(
-      (r) => !r.private && r.owner.login === "alexandrearabian",
+        };
+      }),
     );
-    return await Promise.all(
-      owned.map(async (r) => ({
-        ...r,
-        preview: r.homepage ? await sharePreview(r.homepage) : null,
-      })),
+
+    return Promise.all(
+      loaded
+        .filter((repo) => repo !== null)
+        .map(async (repo) => ({
+          ...repo,
+          preview: repo.homepage ? await sharePreview(repo.homepage) : null,
+        })),
     );
   } catch {
     return [];
