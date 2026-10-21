@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 @import "./cursors.css";
 
 /* Theme is set on <html data-theme> by the toggle (see layout.tsx), so
@@ -27,6 +26,21 @@
     from {
       opacity: 0;
       transform: translateY(12px);
+    }
+  }
+
+  /* The board slides up into place; the hint under it fades in. */
+  --animate-board-in: board-in 1s ease both;
+  @keyframes board-in {
+    from {
+      opacity: 0;
+      transform: translateY(1.5rem);
+    }
+  }
+  --animate-fade-in: fade-in 0.7s ease both;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
     }
   }
 
@@ -93,7 +107,6 @@
      wooden board. */
   --square-hover: #d6a95e;
   --shadow: rgb(43 29 18 / 0.28);
-  --piece-detail: var(--background);
 
   color-scheme: light;
 }

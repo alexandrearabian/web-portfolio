@@ -1,12 +1,12 @@
 import { ImageResponse } from "next/og";
-import { PIECES } from "~/lib/pieces";
+import { PIECE_SETS } from "~/lib/pieces";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
 // iOS needs a PNG home-screen icon; render the same pawn as the favicon.
 export default function AppleIcon() {
-  const pawn = PIECES.pawn.match(/ d="([^"]+)"/)![1];
+  const pawn = PIECE_SETS.black.pawn.match(/ d="([^"]+)"/)![1];
   return new ImageResponse(
     (
       <div

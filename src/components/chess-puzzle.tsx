@@ -313,7 +313,7 @@ export function ChessPuzzle() {
                 }}
                 aria-label={sq}
                 className={cn(
-                  "relative outline-none",
+                  "relative outline-none focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-white/90",
                   light ? "bg-square-light" : "bg-square-dark",
                   // Once playing, only squares with a piece to drag stop
                   // touch scrolling.

@@ -22,6 +22,8 @@ export const metadata: Metadata = {
     description: "Software engineer in Barcelona. Experience, projects and CV.",
     type: "website",
   },
+  // The image comes from opengraph-image.tsx.
+  twitter: { card: "summary_large_image" },
 };
 
 const geist = Geist({
@@ -82,7 +84,7 @@ export default async function RootLayout({
             <main id="main">{children}</main>
           </ThemeProvider>
         </LanguageProvider>
-	<Analytics/>
+        <Analytics />
       </body>
     </html>
   );

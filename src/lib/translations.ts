@@ -181,15 +181,15 @@ export const translations = {
       solved: "Jaque mate. Ahogado por sus propias piezas.",
       reset: "Reiniciar",
       solution: "Ver solución",
-      play: "Tocá para jugar",
+      play: "Toca para jugar",
     },
     hero: {
       role: "Ingeniero Informático en Barcelona",
       line: "Me gusta programar… y el ajedrez.",
-      hint: "Mueva el caballo a una casilla.",
+      hint: "Mueve el caballo a una casilla.",
       knight: "Caballo. Selecciónalo para ver sus movimientos",
       cv: "Descargar CV",
-      email: "Escribime",
+      email: "Escríbeme",
     },
     about: {
       title: "Sobre mí",

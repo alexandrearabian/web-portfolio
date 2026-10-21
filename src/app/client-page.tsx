@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowUpRight, Check, Copy, Download } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "~/contexts/LanguageContext";
@@ -11,11 +10,16 @@ import { ChessPiece, type PieceType } from "~/components/chess-piece";
 import { KnightBoard, type BoardSection } from "~/components/knight-board";
 import dynamic from "next/dynamic";
 import {
+  ArrowTopRightIcon,
+  CheckIcon,
+  CopyIcon,
+  DownloadIcon,
   EnvelopeClosedIcon,
   GitHubLogoIcon,
   GlobeIcon,
   LinkedInLogoIcon,
 } from "@radix-ui/react-icons";
+import { EMAIL, GITHUB_URL, LINKEDIN_URL } from "~/lib/contact";
 import type { Repo } from "./actions/getRepos";
 
 // The puzzle's code is only fetched when its section opens: most visits
@@ -32,9 +36,6 @@ const ChessPuzzle = dynamic(
 );
 
 const EASE = [0.16, 1, 0.3, 1] as const;
-const EMAIL = "alexandre.arabian.j@gmail.com";
-const GITHUB_URL = "https://github.com/alexandrearabian";
-const LINKEDIN_URL = "https://www.linkedin.com/in/alexandre-arabian-jensezian/";
 
 // Proper nouns stay in code; only the AI group's phrases get translated.
 const SKILLS = {
@@ -53,8 +54,8 @@ const SKILLS = {
   cloud: ["AWS", "Google Cloud", "Azure", "Docker", "Git", "GitHub"],
 } as const;
 
-// Screenshots of the live sites, preferred over the sites' own share
-// images and GitHub's generated card.
+// Screenshots of the live sites, preferred over the repos' GitHub social
+// previews.
 const SHOTS: Record<string, string> = {
   "mar-jabones": "/projects/mar-jabones.png",
   ayan: "/projects/ayan.png",
@@ -427,7 +428,7 @@ function ProjectList({
                   >
                     <GlobeIcon className="size-4" />
                     {labels.live}
-                    <ArrowUpRight className="size-4" />
+                    <ArrowTopRightIcon className="size-4" />
                   </a>
                 )}
                 <a
@@ -438,7 +439,7 @@ function ProjectList({
                 >
                   <GitHubLogoIcon className="size-4" />
                   {labels.code}
-                  <ArrowUpRight className="size-4" />
+                  <ArrowTopRightIcon className="size-4" />
                 </a>
               </div>
             </div>
@@ -485,7 +486,7 @@ function ProjectList({
                 {shown.name}
               </p>
             </div>
-            <ArrowUpRight className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <ArrowTopRightIcon className="size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
         </a>
       </aside>
@@ -537,12 +538,9 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             ? [repo.language]
             : [],
         // Already a full URL or null (see normalizeSite in getRepos).
-        site: repo.homepage ?? null,
-        github: repo.html_url,
-        image:
-          SHOTS[repo.name] ??
-          repo.preview ??
-          `https://opengraph.githubassets.com/1/${repo.owner.login}/${repo.name}`,
+        site: repo.homepage,
+        github: repo.url,
+        image: SHOTS[repo.name] ?? repo.image,
       })),
     [repos],
   );
@@ -568,7 +566,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
           >
             <link.Icon className="size-4" />
             {link.label}
-            <ArrowUpRight className="size-4" />
+            <ArrowTopRightIcon className="size-4" />
           </a>
         </li>
       ))}
@@ -578,7 +576,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
           download={cvName}
           className="hover:text-accent inline-flex items-center gap-1.5 transition-colors"
         >
-          <Download className="size-4" />
+          <DownloadIcon className="size-4" />
           {t.contact.cv}
         </a>
       </li>
@@ -719,8 +717,6 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
             <div className="mt-2 flex items-center gap-4">
               <a
                 href={`mailto:${EMAIL}`}
-                target="_blank"
-                rel="noopener noreferrer"
                 onClick={handleEmailClick}
                 className="font-display hover:text-accent min-w-0 truncate text-[clamp(1.6rem,5vw,3rem)] leading-tight underline decoration-current/20 decoration-1 underline-offset-[0.2em] transition-colors hover:decoration-current lg:text-[2.6rem]"
               >
@@ -734,9 +730,9 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
                 className="text-muted-foreground hover:text-foreground border-border grid size-10 shrink-0 place-items-center rounded-full border transition-colors"
               >
                 {emailCopied ? (
-                  <Check className="text-accent size-4" />
+                  <CheckIcon className="text-accent size-4" />
                 ) : (
-                  <Copy className="size-4" />
+                  <CopyIcon className="size-4" />
                 )}
               </button>
             </div>
@@ -768,8 +764,6 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
           </p>
           <a
             href={`mailto:${EMAIL}`}
-            target="_blank"
-            rel="noopener noreferrer"
             onClick={handleEmailClick}
             className="hover:text-accent mt-3 inline-flex items-center gap-2 text-lg underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
           >
@@ -829,18 +823,16 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
               download={cvName}
               className="hover:text-accent inline-flex items-center gap-1.5 underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
             >
-              <Download className="size-4" />
+              <DownloadIcon className="size-4" />
               {t.hero.cv}
             </a>
             <a
               href={`mailto:${EMAIL}`}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={handleEmailClick}
               className="hover:text-accent inline-flex items-center gap-1 underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
             >
               {t.hero.email}
-              <ArrowUpRight className="size-4" />
+              <ArrowTopRightIcon className="size-4" />
             </a>
           </div>
         }
@@ -878,7 +870,7 @@ export default function HomePage({ repos }: { repos: Repo[] }) {
               transition={{ duration: 0.3, ease: EASE }}
               className="bg-foreground text-background flex items-center gap-2 rounded-full py-2.5 pr-5 pl-4 text-sm font-medium"
             >
-              <Check className="text-brass size-4" strokeWidth={2.5} />
+              <CheckIcon className="text-brass size-4" />
               {t.contact.copied}
             </motion.p>
           )}

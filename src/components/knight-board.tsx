@@ -420,6 +420,9 @@ export function KnightBoard({
         // In a section the board is out of sight: pause its endless
         // animations (the knight's bob, the squares' breathing).
         runway.toggleAttribute("data-idle", !onBoard);
+        // Nor can it be tabbed into from the section: focusing a square
+        // would scroll the page up and fold the section away.
+        runway.inert = !onBoard;
       }
     };
     const schedule = () => {
@@ -708,7 +711,7 @@ export function KnightBoard({
         <div
           ref={sceneRef}
           // Pushed down a little from md, clear of the intro's corner.
-          className="animate-in fade-in slide-in-from-bottom-6 fill-mode-both relative duration-1000 [animation-delay:300ms] md:mt-16"
+          className="animate-board-in relative [animation-delay:300ms] md:mt-16"
           style={{
             width: "var(--board)",
             height: "calc(var(--board) * 0.7)",
@@ -778,7 +781,7 @@ export function KnightBoard({
                     onClick={() => void move(i)}
                     aria-label={`${t.rail.jump} ${t.nav[section.id]}`}
                     className={cn(
-                      "bg-square-dark group relative transition-[transform,box-shadow] duration-300 ease-out outline-none [transform-style:preserve-3d] hover:[transform:translateZ(var(--edge))] hover:bg-[var(--square-hover)] hover:shadow-[0_10px_24px_-6px_rgb(0_0_0/0.45)]",
+                      "bg-square-dark group relative transition-[transform,box-shadow] duration-300 ease-out outline-none [transform-style:preserve-3d] hover:[transform:translateZ(var(--edge))] hover:bg-[var(--square-hover)] hover:shadow-[0_10px_24px_-6px_rgb(0_0_0/0.45)] focus-visible:[transform:translateZ(var(--edge))] focus-visible:bg-[var(--square-hover)] focus-visible:shadow-[0_10px_24px_-6px_rgb(0_0_0/0.45)]",
                       dragOver === i && "bg-[var(--square-hover)]",
                     )}
                   >
@@ -790,7 +793,7 @@ export function KnightBoard({
                       className={cn(
                         // Resting at 0, so it stays invisible when reduced
                         // motion collapses the animation.
-                        "bg-square-light absolute inset-0 opacity-0 group-hover:hidden",
+                        "bg-square-light absolute inset-0 opacity-0 group-hover:hidden group-focus-visible:hidden",
                         showMoves
                           ? "animate-breathe-strong [--breathe:0.38]"
                           : "animate-breathe",
@@ -826,7 +829,7 @@ export function KnightBoard({
                         }}
                         // White pills in both themes: they sit on the wooden
                         // board, which stays wood-coloured either way.
-                        className="absolute bottom-0 left-0 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/95 py-1 pr-3 pl-1.5 text-xs font-medium whitespace-nowrap text-[#2b1d12] shadow-[0_6px_16px_-8px_rgb(0_0_0/0.45)] ring-[var(--square-hover)] transition-[translate,scale,box-shadow] duration-300 group-hover:-translate-y-2 group-hover:scale-110 group-hover:ring-2 sm:text-sm md:gap-1.5 md:py-1.5 md:pr-4 md:pl-2 md:text-base"
+                        className="absolute bottom-0 left-0 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/95 py-1 pr-3 pl-1.5 text-xs font-medium whitespace-nowrap text-[#2b1d12] shadow-[0_6px_16px_-8px_rgb(0_0_0/0.45)] ring-[var(--square-hover)] transition-[translate,scale,box-shadow] duration-300 group-hover:-translate-y-2 group-hover:scale-110 group-hover:ring-2 group-focus-visible:-translate-y-2 group-focus-visible:scale-110 group-focus-visible:ring-2 sm:text-sm md:gap-1.5 md:py-1.5 md:pr-4 md:pl-2 md:text-base"
                       >
                         <ChessPiece
                           type={section.piece}
@@ -880,7 +883,7 @@ export function KnightBoard({
               // Hidden and sizeless until paint() places it: before that
               // the SVG would fall back to the browser's default 300x150.
               // Scaled from its top-left by paint().
-              "text-foreground invisible absolute top-0 left-0 size-0 origin-top-left touch-none outline-none",
+              "text-foreground invisible absolute top-0 left-0 size-0 origin-top-left touch-none",
               ghost && "opacity-0",
             )}
           >
@@ -894,7 +897,7 @@ export function KnightBoard({
             box in perspective. */}
         <div className="mt-6 md:hidden">{actions}</div>
 
-        <p className="text-muted-foreground animate-in fade-in fill-mode-both flex items-center gap-2 text-sm duration-700 [animation-delay:0.5s] md:absolute md:right-8 md:bottom-8 lg:right-12">
+        <p className="text-muted-foreground animate-fade-in flex items-center gap-2 text-sm [animation-delay:0.5s] md:absolute md:right-8 md:bottom-8 lg:right-12">
           <ChessPiece type="knight" className="size-4" />
           {t.hero.hint}
         </p>
